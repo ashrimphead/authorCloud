@@ -1,0 +1,3 @@
+<?php
+
+include_once('authorcloud_settings.features.inc');
