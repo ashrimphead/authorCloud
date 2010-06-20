@@ -1,0 +1,18 @@
+<?php
+// $Id: og_subgroups.install,v 1.7 2008/09/03 08:04:43 amitaibu Exp $
+
+/**
+ * @file
+ * Uninstall og_subgroups module's variables.
+ */
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function og_subgroups_uninstall() {
+  variable_del('og_subgroups_propagate_content');
+  variable_del('og_subgroups_propagate_member');
+  variable_del('og_subgroups_propagate_type');
+  variable_del('og_subgroups_propagate_demote');
+  variable_del('og_subgroups_block_mode');  
+}

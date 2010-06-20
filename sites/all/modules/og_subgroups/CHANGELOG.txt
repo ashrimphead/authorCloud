@@ -1,0 +1,9 @@
+// $id$
+
+Subgroups for organic groups 6.x-0.x
+----------------------
+- #228493 - Added option to propagate only admins of subgroups.
+- User and admin propagation.
+- Subgroups block allows showing the groups hierarchy when viewing a group post.
+- Complete rewrite of the module based on core's book module.
+

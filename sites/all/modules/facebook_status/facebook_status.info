@@ -1,0 +1,11 @@
+; $Id$
+name = Facebook-style Statuses
+description = "Allows users to have an arbitrary status, Facebook-style."
+package = Facebook-style Statuses
+core = 6.x
+; Information added by drupal.org packaging script on 2010-05-27
+version = "6.x-2.2"
+core = "6.x"
+project = "facebook_status"
+datestamp = "1274932814"
+

@@ -1,0 +1,334 @@
+<?php
+// $Id: og_subgroups.module,v 1.47 2008/12/18 20:10:09 amitaibu Exp $
+
+/**
+ * @file
+ * Maintains subgroups outline created by the organic groups module.
+ */
+
+/**
+ * The number of directions a content/ member can propagate.
+ *
+ * Directions are: up (parent), down (children) and side (siblings).
+ */
+define('OG_SUBGROUPS_DIRECTION_COUNT', 3);
+
+/**
+ * Implementation of hook_perm().
+ */
+function og_subgroups_perm() {
+  return array('administer subgroups');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function og_subgroups_menu() {
+  $items['admin/og/subgroups'] = array(
+    'title' => 'Subgroups for organic groups configuration',
+    'description' => "Manage your site's subgroups outline.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('og_subgroups_admin_settings'),
+    'access arguments' => array('administer subgroups'),
+    'weight' => 1,
+    'file' => 'og_subgroups.admin.inc',
+   );
+  return $items;
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function og_subgroups_nodeapi(&$node, $op, $teaser, $page) {
+  switch ($op) {
+    case 'view':
+      // Remove the book navigation on group nodes.
+      if (og_is_group_type($node->type) && !empty($node->content['book_navigation'])) {
+        unset($node->content['book_navigation']);
+      }
+    case 'insert':
+      og_subgroups_propogate_content($node);
+      break;
+    case 'update':
+      og_subgroups_propogate_content($node);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_block().
+ *
+ * Displays the book table of contents in a block when the current page is a
+ * group post or group node and part of a book.
+ * Pattern taken from book module.
+ */
+function og_subgroups_block($op = 'list', $delta = 0, $edit = array()) {
+  $block = array();
+  switch ($op) {
+    case 'list':
+      $block[0]['info'] = t('Subgroups navigation');
+      $block[0]['cache'] = BLOCK_CACHE_PER_PAGE | BLOCK_CACHE_PER_ROLE;
+      return $block;
+    case 'view':
+      $current_bid = 0;
+      if ($node = og_get_group_context()) {
+        // Check if node is a group member and if the group is part of a book.
+        $current_bid = empty($node->book['bid']) ? 0 : $node->book['bid'];
+      }
+      if (variable_get('og_subgroups_block_mode', 'all pages') == 'all pages') {
+        $block['subject'] = t('Subgroups navigation');
+        $book_menus = array();
+        $pseudo_tree = array(0 => array('below' => FALSE));
+        foreach (book_get_books() as $book_id => $book) {
+          if ($book['bid'] == $current_bid) {
+            // If the current page is a node associated with a book, the menu
+            // needs to be retrieved.
+            $book_menus[$book_id] = menu_tree_output(menu_tree_all_data($node->book['menu_name'], NULL));
+          }
+          else {
+            // Since we know we will only display a link to the top node, there
+            // is no reason to run an additional menu tree query for each book.
+            $book['in_active_trail'] = FALSE;
+            $pseudo_tree[0]['link'] = $book;
+            $book_menus[$book_id] = menu_tree_output($pseudo_tree);
+          }
+        }
+        $block['content'] = theme('book_all_books_block', $book_menus);
+      }
+      elseif ($current_bid) {
+        // Only display this block when the user is browsing a book.
+        $title = db_result(db_query(db_rewrite_sql('SELECT n.title FROM {node} n WHERE n.nid = %d'), $node->book['bid']));
+        // Only show the block if the user has view access for the top-level
+        // node.
+        if ($title) {
+          $tree = menu_tree_all_data($node->book['menu_name'], $node->book);
+          // There should only be one element at the top level.
+          $data = array_shift($tree);
+          $block['subject'] = theme('book_title_link', $data['link']);
+          $block['content'] = ($data['below']) ? menu_tree_output($data['below']) : '';
+        }
+      }
+      return $block;
+    case 'configure':
+      $options = array(
+        'all pages' => t('Show block on all pages'),
+        'book pages' => t('Show block only on group post or group nodes which are in a book'),
+      );
+      $form['og_subgroups_block_mode'] = array(
+        '#type' => 'radios',
+        '#title' => t('Subgroups navigation block display'),
+        '#options' => $options,
+        '#default_value' => variable_get('og_subgroups_block_mode', 'all pages'),
+        '#description' => t("If <em>Show block on all pages</em> is selected, the block will contain the automatically generated menus for all of the site's books. If <em>Show block only on book pages</em> is selected, the block will contain only the one menu corresponding to the current page's book. In this case, if the current page is not a group post or a group node and part of a book, no block will be displayed. The <em>Page specific visibility settings</em> or other visibility settings can be used in addition to selectively display this block."),
+        );
+      return $form;
+    case 'save':
+      variable_set('og_subgroups_block_mode', $edit['og_subgroups_block_mode']);
+      break;
+  }
+}
+
+/**
+ * Propagate a group post along the subgroup outline.
+ *
+ * @param $node
+ *   The node object that is being inserted/ updated.
+ */
+function og_subgroups_propogate_content($node) {
+  $directions = variable_get('og_subgroups_propagate_content', array());
+  $nodes = og_subgroups_get_groups_for_propagate($node, $directions);
+  foreach ($nodes as $key => $value) {
+    // Check that post isn't already assigned to the group.
+    $save = FALSE;
+    if (og_is_group_post_type($node->type) && !in_array($key, $node->og_groups)) {
+      // Add og's data to the group post node.
+      $node->og_groups[] = $key;
+      $node->og_groups_both[$key] = $value['title'];
+      $save = TRUE;
+
+    }
+    // Save the node only if it was changed.
+    if ($save) {
+      og_save_ancestry($node);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_og().
+ */
+function og_subgroups_og($op, $gid, $uid, $args = array()) {
+  switch ($op) {
+    case 'user insert':
+      og_subgroups_propogate_user($gid, $uid, $args);
+      break;
+    case 'user update':
+      og_subgroups_propogate_user($gid, $uid, $args);
+      break;
+    case 'user delete':
+      og_subgroups_propogate_user($gid, $uid, $args);
+      break;
+  }
+}
+
+/**
+* Propagates members and admins along the subgroups outline.
+*
+* @param $gid
+*   The group id.
+* @param $uid
+*   The propagated user id.
+* @param $args
+*   Array with the updated action, as returned from hook_og()
+*/
+function og_subgroups_propogate_user($gid, $uid, $args) {
+  if (empty($args['og_subgroups'])) {
+    global $user;
+    if ($user->uid != $uid) {
+      $account = user_load(array('uid' => $uid));
+    }
+    else {
+      $account = $user;
+    }
+    $admin_propagate = variable_get('og_subgroups_propagate_type', 'admin_propagate');
+    $is_admin = $args['is_admin'] && $admin_propagate != 'no_admin_propagate';
+    $demote = variable_get('og_subgroups_propagate_demote', array());
+
+    if (!$is_admin && $admin_propagate == 'only_admin_propagate' && !$demote['remove_admin']) {
+      // If propagate only admin rights and it's a regular membership
+      // and there is no admin rights demotion - do nothing.
+      // Like this we can escape redundant calculations.
+      return;
+    }
+    elseif ($node = node_load($gid)) {
+      $directions = variable_get('og_subgroups_propagate_member', array());
+      $nodes = og_subgroups_get_groups_for_propagate($node, $directions);
+      // Remove the original group node from the nodes list.
+      unset($nodes[$gid]);
+      foreach ($nodes as $group_nid => $value) {
+        // TODO: OG should allow passing $args['og_subgroups'] as it currently
+        // loops over and over again.
+        if (empty($args) && $demote['unsubscribe']) {
+          // Remove user from groups.
+          og_delete_subscription($group_nid, $account->uid);
+        }
+        // Make sure:
+        // 1) User isn't a member;
+        // 2) or Admin propagation, and member isn't admin;
+        // 3) or Admin demotion and user is member of the group.
+        elseif (!og_is_group_member($group_nid, TRUE, $account->uid) || ($is_admin && !$account->og_groups[$group_nid]['is_admin']) || (!empty($account->og_groups[$group_nid]['is_admin']) && !$args['is_admin'] && $demote['remove_admin'])) {
+          // Pass in the $args info about propagation done by og_subgroups module.
+          og_save_subscription($group_nid, $uid, array('is_active' => 1, 'is_admin' => $is_admin, 'og_subgroups' => TRUE));
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Helper function; get all the groups which content/ user should be propagated
+ * to.
+ *
+ * @param $node
+ *   The loaded node object.
+ * @return
+ *   The nids and depth relative to the menu item the node group node
+ *   belongs to.
+ */
+function og_subgroups_get_groups_for_propagate($node, $directions = array()) {
+  $nodes = array();
+  // Clean up the directions of propagation.
+  $directions = array_filter($directions);
+
+  // Propagation can be done only if there is a direction and
+  // on group posts and group nodes.
+  // and if node belongs to any group(s).
+  if ($directions && (og_is_group_post_type($node->type) || og_is_group_type($node->type))) {
+    if (!empty($node->og_groups)) {
+      // Node is a group post.
+      $groups = $node->og_groups;
+    }
+    else {
+      // Node is a group node.
+      $groups[$node->nid] = $node->nid;
+    }
+    foreach ($groups as $gid) {
+      // Check if node isn't already loaded.
+      if ($gid == $node->nid) {
+        $group_node = $node;
+      }
+      else {
+        $group_node = node_load($gid);
+      }
+      // Get the menu from root down.
+      $menu = menu_tree_all_data($group_node->book['menu_name'], NULL);
+
+      // Get the nids of every menu item.
+      $node_links = array();
+      menu_tree_collect_node_links($menu, $node_links);
+
+      // If direction is up, down and side then all groups will be used.
+      // Otherwise remove the unnecessary groups.
+      if (count($directions) != OG_SUBGROUPS_DIRECTION_COUNT && $node_links) {
+        $mlid = array_values($node_links[$gid]);
+        $mlid = $mlid[0]['mlid'];
+        _og_subgroups_filter_groups($gid, $mlid, $node_links, $directions);
+      }
+
+      // Get all the nodes required for propagation.
+      // Duplicate groups will be removed as it is an associative array.
+      $nodes += $node_links;
+    }
+  }
+  return $nodes;
+}
+
+/**
+ * Helper function - remove node groups which are not required for propagation.
+ *
+ * @param $gid
+ *   The group id.
+ * @param $mlid
+ *   The menu id of the group.
+ * @param $node_links
+ *   Passed by reference. node groups which aren't needed will be unset.
+ * @param $directions
+ *   The directions of propagation.
+ */
+function _og_subgroups_filter_groups($gid, $mlid, &$node_links, $directions) {
+  foreach ($node_links as $key => $links) {
+    $item_key = array_keys($links);
+    $item_key = $item_key[0];
+    $remove = TRUE;
+    if (isset($directions['up'])) {
+      // Get parents from the group's menu path.
+      $i = 1;
+      while ($i <= MENU_MAX_DEPTH && $remove && $node_links[$gid][$mlid]['p'. $i] != 0) {
+        $node_links[$gid][$mlid]['p'. $i] == $item_key ? $remove = FALSE : $i++;
+      }
+    }
+    if (isset($directions['down'])) {
+      // Get children parent is in their menu.
+      $i = 1;
+      while ($i <= MENU_MAX_DEPTH && $remove && $links[$item_key]['p'. $i] != 0) {
+        $links[$item_key]['p'. $i] == $mlid ? $remove = FALSE : $i++;
+      }
+    }
+    // Get brothers that have the same parent.
+    if (isset($directions['side']) && $links[$item_key]['plid'] == $node_links[$gid][$mlid]['plid']) {
+      $remove = FALSE;
+    }
+    if (!$remove) {
+      $group = node_load($key);
+      // Check node is a group node, as there might be non-group nodes
+      // in the book outline.
+      if (!og_is_group_type($group->type)) {
+        $remove = TRUE;
+      }
+    }
+    if ($remove) {
+      // Group post doesn't need to be propagated to this group node.
+      unset($node_links[$key]);
+    }
+  }
+}

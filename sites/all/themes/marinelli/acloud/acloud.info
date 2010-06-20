@@ -1,0 +1,19 @@
+name = acloud
+description = authorcloud theme
+version = VERSION
+
+core = 6.x
+
+engine = phptemplate
+
+stylesheets[all][] = acloud.css
+stylesheets[all][] = typography.css
+stylesheets[all][] = graphics.css
+stylesheets[all][] = layout.css
+stylesheets[all][] = links.css
+
+
+base theme = marinelli
+
+
+

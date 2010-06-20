@@ -1,0 +1,220 @@
+# $Id: uc_canadapost.pot,v 1.2 2009/03/26 01:36:42 tr Exp $
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  uc_canadapost.admin.inc,v 1.1 2009/03/18 05:03:29 tr
+#  uc_canadapost.module,v 1.6 2009/03/26 00:44:02 tr
+#  uc_canadapost.info,v 1.2 2009/03/18 05:04:52 tr
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-03-25 20:26-0500\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: uc_canadapost.admin.inc:22
+msgid "Canada Post merchant CPC ID"
+msgstr ""
+
+#: uc_canadapost.admin.inc:25
+msgid "Your Canada Post SellOnline account number. Visit http://sellonline.canadapost.ca to get one."
+msgstr ""
+
+#: uc_canadapost.admin.inc:29
+msgid "Canada Post interface URL"
+msgstr ""
+
+#: uc_canadapost.admin.inc:32
+msgid "The server and port to use for shipping calculations."
+msgstr ""
+
+#: uc_canadapost.admin.inc:36
+msgid "Canada Post Services"
+msgstr ""
+
+#: uc_canadapost.admin.inc:39
+msgid "Select the shipping services that are available to customers. This list only serves to further restrict the services as set up in your SellOnline account. If you have not selected a service in your Canada Post account, it will not show up even if it is selected here."
+msgstr ""
+
+#: uc_canadapost.admin.inc:43
+msgid "Markup type"
+msgstr ""
+
+#: uc_canadapost.admin.inc:46
+msgid "Percentage (%)"
+msgstr ""
+
+#: uc_canadapost.admin.inc:47
+msgid "Multiplier (×)"
+msgstr ""
+
+#: uc_canadapost.admin.inc:48
+msgid "Addition (!currency)"
+msgstr ""
+
+#: uc_canadapost.admin.inc:53
+msgid "Shipping rate markup"
+msgstr ""
+
+#: uc_canadapost.admin.inc:55
+msgid "Markup shipping rate quote by dollar amount, percentage, or multiplier. Please note if this rate is not blank, it overrides the \"Handling fee\" set up in your SellOnline account. If blank, the handling fee from your SellOnline account will be used."
+msgstr ""
+
+#: uc_canadapost.admin.inc:59
+msgid "Turn-around time"
+msgstr ""
+
+#: uc_canadapost.admin.inc:61
+msgid "Number of hours for turn-around time before shipping. Allows rates to properly calculate extra charges for weekend delivery. Overrides the setting in your SellOnline account."
+msgstr ""
+
+#: uc_canadapost.admin.inc:65
+msgid "Delivery date format"
+msgstr ""
+
+#: uc_canadapost.admin.inc:67
+msgid "Format to display estimated delivery date."
+msgstr ""
+
+#: uc_canadapost.admin.inc:74
+msgid "Ship from postal code"
+msgstr ""
+
+#: uc_canadapost.admin.inc:76
+msgid "Postal code to ship from. If supplied, overrides the entry in your SellOnline account."
+msgstr ""
+
+#: uc_canadapost.module:66
+msgid "Shipping quote from Canada Post"
+msgstr ""
+
+#: uc_canadapost.module:73
+msgid "Fetch a shipping quote"
+msgstr ""
+
+#: uc_canadapost.module:101
+msgid "Small Packages"
+msgstr ""
+
+#: uc_canadapost.module:120;265;26
+msgid "Canada Post"
+msgstr ""
+
+#: uc_canadapost.module:144;152 uc_canadapost.info:0
+msgid "Canada Post Shipping"
+msgstr ""
+
+#: uc_canadapost.module:145
+msgid "More information is needed to access your Canada Post account. Please enter it "
+msgstr ""
+
+#: uc_canadapost.module:153
+msgid "Information needed to access your Canada Post account has been entered."
+msgstr ""
+
+#: uc_canadapost.module:188
+msgid "At least one item in this order is too heavy to ship via Canada Post.  Canada Post has a 30kg package weight limit."
+msgstr ""
+
+#: uc_canadapost.module:276;603
+msgid "Estimated delivery"
+msgstr ""
+
+#: uc_canadapost.module:555
+msgid "Canada Post Regular"
+msgstr ""
+
+#: uc_canadapost.module:556
+msgid "Canada Post Expedited"
+msgstr ""
+
+#: uc_canadapost.module:557
+msgid "Canada Post Xpresspost"
+msgstr ""
+
+#: uc_canadapost.module:558
+msgid "Canada Post Priority Courier"
+msgstr ""
+
+#: uc_canadapost.module:561;570
+msgid "Canada Post Small Packets Surface"
+msgstr ""
+
+#: uc_canadapost.module:562;572
+msgid "Canada Post Small Packets Air"
+msgstr ""
+
+#: uc_canadapost.module:563
+msgid "Canada Post Expedited US Business Contract"
+msgstr ""
+
+#: uc_canadapost.module:564
+msgid "Canada Post Expedited US Commercial"
+msgstr ""
+
+#: uc_canadapost.module:565
+msgid "Canada Post Xpresspost USA"
+msgstr ""
+
+#: uc_canadapost.module:566
+msgid "Canada Post Priority Worldwide USA"
+msgstr ""
+
+#: uc_canadapost.module:567
+msgid "Canada Post Priority Worldwide PAK USA"
+msgstr ""
+
+#: uc_canadapost.module:571
+msgid "Canada Post Surface International"
+msgstr ""
+
+#: uc_canadapost.module:573
+msgid "Canada Post Air International"
+msgstr ""
+
+#: uc_canadapost.module:574
+msgid "Canada Post Xpresspost International"
+msgstr ""
+
+#: uc_canadapost.module:575
+msgid "Canada Post Priority Worldwide International"
+msgstr ""
+
+#: uc_canadapost.module:576
+msgid "Canada Post Priority Worldwide PAK International"
+msgstr ""
+
+#: uc_canadapost.module:600
+msgid "Don't display estimate"
+msgstr ""
+
+#: uc_canadapost.module:356;0
+msgid "uc_canadapost"
+msgstr ""
+
+#: uc_canadapost.module:356
+msgid "Shipping failed. Request was: !request, response was !response"
+msgstr ""
+
+#: uc_canadapost.module:268
+msgid "1 package"
+msgid_plural "@count packages"
+msgstr[0] ""
+msgstr[1] ""
+
+#: uc_canadapost.info:0
+msgid "Integration of Canada Post shipping rates tool with Ubercart."
+msgstr ""
+
+#: uc_canadapost.info:0
+msgid "Ubercart - fulfillment"
+msgstr ""
+

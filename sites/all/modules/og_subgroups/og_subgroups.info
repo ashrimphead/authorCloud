@@ -1,0 +1,13 @@
+; $Id: og_subgroups.info,v 1.8 2008/11/15 21:23:42 ezrag Exp $
+name = Subgroups for Organic groups 
+description = "Propagate content and users along the group's outline defined by the book module."
+package = "Organic groups"
+dependencies[] = og
+dependencies[] = book
+core = 6.x
+; Information added by drupal.org packaging script on 2008-12-19
+version = "6.x-0.x-dev"
+core = "6.x"
+project = "og_subgroups"
+datestamp = "1229645490"
+

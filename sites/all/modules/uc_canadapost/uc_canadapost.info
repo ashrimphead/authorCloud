@@ -1,0 +1,16 @@
+; $Id: uc_canadapost.info,v 1.2 2009/03/18 05:04:52 tr Exp $
+name = Canada Post Shipping
+description = Integration of Canada Post shipping rates tool with Ubercart.
+dependencies[] = uc_quote
+package = Ubercart - fulfillment
+version = "$Name: DRUPAL-6--1-0 $"
+
+core = 6.x
+php = 5.0
+
+; Information added by drupal.org packaging script on 2009-04-07
+version = "6.x-1.0"
+core = "6.x"
+project = "uc_canadapost"
+datestamp = "1239073567"
+

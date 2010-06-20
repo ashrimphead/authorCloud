@@ -1,0 +1,61 @@
+/* $Id: ie8-fixes.css,v 1.1.2.1 2010/05/19 19:28:17 sheenad Exp $ */
+
+.page-node .node {
+  clear: both;
+  padding-top: 10px;
+  }
+  
+.page-node .node .node-title-wrapper {
+  display: block;
+  position: absolute;
+  right: 0;
+  margin-top: -20px;
+  width: 100%;
+}  
+
+.magazeen-rounded-list .item-list ul li,
+.magazeen-rounded-list  ul.menu li{
+  background-color: #0C0B0B;
+  border: 1px solid #0C0B0B;
+  color: #A7A7A7;
+  }
+
+.magazeen-rounded-list .inner .item-list ul li a,
+.magazeen-rounded-list .inner  ul.menu li a,
+.magazeen-rounded-list .inner .views-row a,
+.magazeen-rounded-list .inner .view .item-list ul li a:hover,
+.magazeen-rounded-list .inner .views-row a:hover,
+.magazeen-rounded-list .inner ul.menu li a:hover{
+  display: block;
+  background-color: transparent;
+  border: none;
+  color: #a7a7a7;
+  position: relative;
+  padding: 0px 2px;
+ text-align: center;
+  z-index: 10;
+  margin-top: -10px;
+  margin-bottom: -10px;
+  }
+  
+  .magazeen-rounded-list .inner .view .item-list ul li a:hover,
+.magazeen-rounded-list .inner .views-row a:hover,
+.magazeen-rounded-list .inner ul.menu li a:hover {
+  color: #f23183;
+  text-decoration: underline;
+}
+  
+  
+.magazeen-rounded-list.fusion-2-col-list .item-list ul .ccwrapper {
+width: 50%;
+float: left;
+}
+
+.magazeen-hot-pink-title h2.title { 
+position: absolute;
+}
+
+.primary-menu-inner ul.sf-menu ul ul,
+.primary-menu-inner ul.sf-menu li.active-trail ul ul{
+  top: 0;
+}

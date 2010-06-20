@@ -1,0 +1,134 @@
+<?php
+// $Id: og_subgroups_content_propagation.test,v 1.3 2008/12/15 21:35:37 amitaibu Exp $
+
+/**
+ * @file
+ * Tests the subgroups for organic groups module.
+ */
+
+module_load_include('php', 'og', 'og_testcase');
+
+class OgSubgroupsContentPropagation extends OgTestCase {
+
+  function getInfo() {
+    return array(
+      'name' => t('Subgroups content propagation'),
+      'description' => t('Tests the check the propagation of content along the subgroups hierarchy.'),
+      'group' => t('Subgroups for organic groups'),
+    );
+  }
+
+  /**
+   * Create a book hierarchy:
+   * Book
+   *  |- Node 0 (group node)
+   *   |- Node 1 (book node)
+   *    |- Node 2 (group node)
+   *     |- Node 3 (group node)
+   *      |- Node 4 (group node)
+   *    |- Node 5 (group node)
+   *
+   */
+  function setUp() {
+    parent::setUp('og', 'book');
+
+    // Create an admin user.
+    $admin_user = $this->drupalCreateUser(array('administer nodes', 'administer content types', 'access administration pages', 'administer site configuration', 'administer organic groups', 'create new books', 'add content to books', 'administer book outlines'));
+    $this->drupalLogin($admin_user);
+
+    // Create a group node content type.
+    $og_group_type = $this->drupalCreateContentType();
+    variable_set('og_content_type_usage_'. $og_group_type->name, 'group');
+    $this->og_group_type = $og_group_type->name;
+
+    // Create a group post content type.
+    $og_post_type = $this->drupalCreateContentType();
+    variable_set('og_content_type_usage_'. $og_post_type->name, 'group_post_standard');
+    $this->og_post_type = $og_post_type->name;
+
+    // Rebuild the menu so the new content types will appear in the menu.
+    menu_rebuild();
+
+    // Following pattern taken from book_module.test
+    // Create a new book.
+    $this->book = $this->addOgSubgroupsGroup('book', 'new');
+    $book = $this->book;
+
+    // Create the book hierarchy.
+    $this->nodes = array();
+    $this->nodes[] = $this->addOgSubgroupsGroup($this->og_group_type, $book->nid);                                  // Node 0
+    $this->nodes[] = $this->addOgSubgroupsGroup('book', $book->nid, $this->nodes['0']->book['mlid']);               // Node 1
+    $this->nodes[] = $this->addOgSubgroupsGroup($this->og_group_type, $book->nid, $this->nodes['1']->book['mlid']); // Node 2
+    $this->nodes[] = $this->addOgSubgroupsGroup($this->og_group_type, $book->nid, $this->nodes['2']->book['mlid']); // Node 3
+    $this->nodes[] = $this->addOgSubgroupsGroup($this->og_group_type, $book->nid, $this->nodes['3']->book['mlid']); // Node 4
+    $this->nodes[] = $this->addOgSubgroupsGroup($this->og_group_type, $book->nid, $this->nodes['1']->book['mlid']); // Node 5
+
+    // The directions a content can propagate.
+    $this->directions = array('up', 'down', 'side');
+  }
+
+  function testOgSubgroupsContentPropagationTest() {
+    foreach($this->directions as $direction) {
+      // Set og_subgroups content propagation to a valid direction.
+      variable_set('og_subgroups_propagate_content', array($direction));
+      // Create a group post under group 2.
+      $group_post = node_load($this->addOgPost($this->og_post_type, array($this->nodes['2']->nid)));
+      switch ($direction) {
+        case 'up':
+          // Node post should have propagated to node 0 (skip over node 1 which
+          // isn't a group node).
+          $this->assertKeysExist($group_post->og_groups, array($this->nodes['2']->nid, $this->nodes['0']->nid), t('Content propagated up.'));
+          break;
+        case 'down':
+          // Node post should have propagated to node 3, 4.
+          $this->assertKeysExist($group_post->og_groups, array($this->nodes['2']->nid, $this->nodes['3']->nid, $this->nodes['4']->nid), t('Content propagated down.'));
+          break;
+        case 'side':
+          // Node post should have propagated to node 4.
+           $this->assertKeysExist($group_post->og_groups, array($this->nodes['2']->nid, $this->nodes['4']->nid), t('Content propagated sideways.'));
+      }
+    }
+  }
+
+  /**
+   * Create group node inside a book hierarchy.
+   *
+   * @param $type
+   *   The node type.
+   * @param $book_nid
+   *   Book node id or set to 'new' to create new book.
+   * @param $parent
+   *   Parent book reference id.
+   * @param $selective
+   *   The group's visibility.
+   * @return
+   *   The node object.
+   *
+   */
+  function addOgSubgroupsGroup($type, $book_nid = NULL, $parent = NULL, $selective = OG_OPEN) {
+    $edit = array();
+    $edit['title'] = $this->randomName(8);
+    $edit['body']= $this->randomName(32);
+    $edit['book[bid]'] = $book_nid;
+
+    // Book content type is a non-group node.
+    if ($type !== 'book') {
+      $edit['og_description'] = $this->randomName(16);
+      $edit['og_selective'] = $selective;
+    }
+    // Make type valid for the URL.
+    $type_hyphen = str_replace("_", "-", $type);
+    if ($parent !== NULL) {
+      $this->drupalPost('node/add/'. $type_hyphen, $edit, t('Change book (update list of parents)'));
+
+      $edit['book[plid]'] = $parent;
+      $this->drupalPost(NULL, $edit, 'Save');
+    }
+    else {
+      $this->drupalPost('node/add/'. $type_hyphen, $edit, t('Save'));
+    }
+    // Load the node.
+    $node = node_load(array('title' => $edit['title']));
+    return $node;
+  }
+}

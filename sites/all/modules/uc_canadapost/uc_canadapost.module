@@ -1,0 +1,733 @@
+<?php
+// $Id: uc_canadapost.module,v 1.6 2009/03/26 00:44:02 tr Exp $
+
+/**
+ * @file
+ * Shipping quote module for Ubercart that interfaces with the Canada Post
+ * shipping tools to get rates for small package shipments.
+ *
+ * @author Tim Rohaly.
+ * @version $Id: uc_canadapost.module,v 1.6 2009/03/26 00:44:02 tr Exp $
+ */
+
+
+/******************************************************************************
+ * Drupal Hooks                                                               *
+ ******************************************************************************/
+
+
+/**
+ * Implementation of hook_menu().
+ */
+function uc_canadapost_menu() {
+  $items = array();
+
+  $items['admin/store/settings/quotes/methods/canadapost'] = array(
+    'title'            => 'Canada Post',
+    'access arguments' => array('configure quotes'),
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('uc_canadapost_admin_settings'),
+    'file'             => 'uc_canadapost.admin.inc',
+    'type'             => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implementation of hook_init().
+ *
+ * Used to load module CSS.  This is the wrong place to do it, because
+ * the CSS will be included on every page, not just on the pages where
+ * it is needed.  However, this is currently the Ubercart-recommended
+ * place for adding shipping quotes CSS.
+ */
+function uc_canadapost_init() {
+    drupal_add_css(drupal_get_path('module', 'uc_canadapost') .'/uc_canadapost.css');
+}
+
+
+/******************************************************************************
+ * Conditional Actions Hooks                                                  *
+ ******************************************************************************/
+
+
+/**
+ * Implementation of hook_ca_predicate().
+ *
+ * Connect the Canada Post quote Action and Event.
+ */
+function uc_canadapost_ca_predicate() {
+  $enabled = variable_get('uc_quote_enabled', array());
+
+  $predicates = array(
+    'uc_canadapost_get_quote' => array(
+      '#title'   => t('Shipping quote from Canada Post'),
+      '#trigger' => 'get_quote_from_canadapost',
+      '#class'   => 'uc_canadapost',
+      '#status'  => $enabled['canadapost'],
+      '#actions' => array(
+        array(
+          '#name'         => 'uc_quote_action_get_quote',
+          '#title'        => t('Fetch a shipping quote'),
+          '#argument_map' => array(
+            'order'  => 'order',
+            'method' => 'method',
+          ),
+        ),
+      ),
+    ),
+  );
+
+  return $predicates;
+}
+
+
+/******************************************************************************
+ * Übercart Hooks                                                             *
+ ******************************************************************************/
+
+
+/**
+ * Implementation of Übercart's hook_shipping_type().
+ */
+function uc_canadapost_shipping_type() {
+  $weight = variable_get('uc_quote_type_weight', array('small_package' => 0));
+
+  $types = array();
+  $types['small_package'] = array(
+    'id'     => 'small_package',
+    'title'  => t('Small Packages'),
+    'weight' => $weight['small_package'],
+  );
+
+  return $types;
+}
+
+
+/**
+ * Implementation of Übercart's hook_shipping_method().
+ */
+function uc_canadapost_shipping_method() {
+  $methods = array();
+
+  $enabled = variable_get('uc_quote_enabled', array());
+  $weight = variable_get('uc_quote_method_weight', array('canadapost' => 0));
+  $methods['canadapost'] = array(
+    'id'      => 'canadapost',
+    'module'  => 'uc_canadapost',
+    'title'   => t('Canada Post'),
+    'quote'   => array(
+      'type'         => 'small_package',
+      'callback'     => 'uc_canadapost_quote',
+      'accessorials' => _uc_canadapost_service_list(),
+    ),
+    'enabled' => $enabled['canadapost'],
+    'weight'  => $weight['canadapost'],
+  );
+
+  return $methods;
+}
+
+
+/**
+ * Implementation of Übercart's hook_store_status().
+ *
+ * Lets the administrator know that the Canada Post account information
+ * has not been filled out.
+ */
+function uc_canadapost_store_status() {
+  $messages = array();
+  if (variable_get('uc_canadapost_cpcid', '') == '') {
+    $messages[] = array('status' => 'error',
+      'title' => t('Canada Post Shipping'),
+      'desc'  => t('More information is needed to access your Canada Post account. Please enter it ') .
+        l('here', 'admin/store/settings/quotes/methods/canadapost') .'.',
+    );
+  }
+
+  if (count($messages) == 0) {
+    $messages[] = array('status' => 'ok',
+      'title' => t('Canada Post Shipping'),
+      'desc'  => t('Information needed to access your Canada Post account has been entered.'),
+    );
+  }
+  return $messages;
+}
+
+
+/******************************************************************************
+ * Module Functions                                                           *
+ ******************************************************************************/
+
+
+/**
+ * Callback for retrieving a Canada Post shipping quote.
+ *
+ * Makes a single request that gets all available shipping options
+ * (limited by the SellOnline account)
+ *
+ * @param $products
+ *   Array of cart contents.
+ * @param $details
+ *   Order details other than product information.
+ * @return
+ *   JSON object containing rate, error, and debugging information.
+ */
+function uc_canadapost_quote($products, $details) {
+
+  // Put products into packages of 30kg or less
+  $packages = _uc_canadapost_package_products($products);
+  //drupal_set_message('<pre>'. var_export($packages, TRUE) .'</pre>');
+
+  if (!count($packages)) {
+    // If uc_canadapost_package_products returned no packages,
+    // then at least one item must be too heavy to ship via Canada Post
+    $rates = array();
+    $rates['data']['error'] = t("At least one item in this order is too heavy to ship via Canada Post.  Canada Post has a 30kg package weight limit.");
+
+    return $rates;
+  }
+
+  // Loop over packages and accumulate quotes, sum quotes together
+  // so we can send the total $ amount and total # packages to uc_quote
+  // for display
+
+  $rates = array();
+  foreach ($packages as $package) {
+    $xml = _uc_canadapost_make_request($package, $details);
+    //drupal_set_message('<pre>'. check_plain(var_export($xml, TRUE)) .'</pre>');
+    $response = _uc_canadapost_do_request($xml);
+    //drupal_set_message('<pre>'. check_plain(var_export($response, TRUE)) .'</pre>');
+    if (user_access('configure quotes') && variable_get('uc_quote_display_debug', FALSE)) {
+      // not quite right - need to get response object before SimpleXML ...
+      // to do this will have to refactor _uc_canadapost_do_request()
+      //$rates['data']['debug'] .= htmlentities($reponse->data) ."<br />\n";
+    }
+
+    if ($response) {
+      $markup   = variable_get('uc_canadapost_markup', '');
+      $services = variable_get('uc_canadapost_services', _uc_canadapost_service_list());
+
+      $ratesAndServicesResponse =& $response->ratesAndServicesResponse;
+      foreach ($ratesAndServicesResponse->product as $product) {
+        $id = (string) $product['id'];
+        if (isset($services[$id]) && ($services[$id] == $id)) {
+          $rates[$id]['option_label'] = theme('uc_canadapost_option_label', $product, $packages);
+          $rates[$id]['rate']  += uc_canadapost_markup($product->rate);
+          $rates[$id]['format'] = uc_currency_format($rates[$id]['rate']);
+        }
+      }
+    }
+  }
+
+  // Sort rate quotes in order of increasing price
+  uasort($rates, 'uc_quote_price_sort');
+
+  return $rates;
+}
+
+
+/**
+ * Implementation of hook_theme() used to declare module theme functions.
+ *
+ */
+function uc_canadapost_theme() {
+  return array(
+    'uc_canadapost_option_label' => array(
+      'file'      => 'uc_canadapost.module',
+      'arguments' => array(
+        'product'  => NULL,
+        'packages' => NULL,
+      ),
+    ),
+  );
+}
+
+
+/**
+ * Theme function to format the Canada Post service name and rate amount
+ * line-item shown to the customer.
+ *
+ * @param $product
+ *   The Canada Post quote details
+ * @param $packages
+ *   Package information
+ * @ingroup themeable
+ */
+function theme_uc_canadapost_option_label($product, $packages) {
+  // Start with CP logo
+  $output  = '<img class="canadapost-logo" src="'. base_path() . drupal_get_path('module', 'uc_canadapost') .'/uc_canadapost_logo.gif" alt="Canada Post Logo" />'
+;
+
+  // Add CP product (service) name
+  $output .= t('Canada Post') .' '. $product->name;
+
+  // Add package information
+  $output .= ' ('. format_plural(count($packages), '1 package', '@count packages') .')';
+
+  // Add estimated delivery date
+  $datefmt  = variable_get('uc_canadapost_datefmt', '');
+  if ($datefmt &&
+      isset($product->deliveryDate) &&
+      ($deliveryDate = $product->deliveryDate)) {
+    $deliveryDate = strtotime($deliveryDate);
+    $output .= ' ('. t('Estimated delivery') .': '. date($datefmt, $deliveryDate) .')';
+    //todo: handle nextDayAM
+  }
+
+  return $output;
+}
+
+
+/**
+ * Builds the XML request string that will be sent to Canada Post
+ */
+function _uc_canadapost_make_request($package, $details) {
+  $lang = 'en';
+  if (module_exists(i18n) && (i18n_get_lang() == 'fr')) {
+    $lang = 'fr';
+  }
+
+  $cpcid = variable_get('uc_canadapost_cpcid', '');
+  $turnaround = variable_get('uc_canadapost_turnaround', FALSE);
+  // Strip any space(s) from postal code
+  $from_postalcode = str_replace(' ', '', variable_get('uc_canadapost_postalcode', FALSE));
+
+  $city = $details['city'];
+  $prov = uc_get_zone_code($details['zone']);
+  $country = uc_get_country_data(array('country_id' => $details['country']));
+
+
+  $country = $country[0]['country_iso_code_2'];
+  // Strip any space(s) from postal code
+  $postalcode = str_replace(' ', '', $details['postal_code']);
+
+  $xml = '<?xml version="1.0" ?>'.
+         '<eparcel><language>'. $lang .'</language><ratesAndServicesRequest>'.
+         '<merchantCPCID>'. $cpcid .'</merchantCPCID>';
+  if ($from_postalcode) {
+    $xml .= '<fromPostalCode>'. $from_postalcode .'</fromPostalCode>';
+  }
+  if ($turnaround) {
+    $xml .= '<turnAroundTime>24</turnAroundTime>';
+  }
+  $xml .= '<itemsPrice>'. $package->price .'</itemsPrice>'.
+          '<lineItems><item>'.
+          '<quantity>1</quantity>'.
+          '<weight>'. $package->shipweight .'</weight>'.
+          '<length>1</length><width>1</width><height>1</height>'.
+          '<description>'. $package->quantity .' items</description><readyToShip />'.
+          '</item></lineItems>';
+  $xml .= '<city>'. $city .'</city>'.
+          '<provOrState>'. $prov .'</provOrState>'.
+          '<country>'. $country .'</country>';
+  $xml .= '<postalCode>'. $postalcode .'</postalCode>';
+  $xml .= '</ratesAndServicesRequest>'.
+          '</eparcel>';
+
+  return $xml;
+}
+
+
+/**
+ * Sends quote request to Canada Post server, returns object with results
+ */
+function _uc_canadapost_do_request($xml) {
+  $url = variable_get('uc_canadapost_url', 'http://sellonline.canadapost.ca:30000/');
+  $headers = array(
+    'User-Agent'   => 'Drupal (Ubercart; Canada Post Shipping module)',
+    'Content-type' => 'application/x-www-form-urlencoded',
+    'Accept'       => 'text/xml,application/xml,text/html;q=0.9,text/plain;*/*;q=0.5',
+  );
+  $http_response = _uc_canadapost_drupal_http_request($url, $headers, 'POST', 'XMLRequest='. urlencode($xml));
+
+  if ($http_response->data) {
+    $response = new SimpleXMLElement($http_response->data);
+
+    if (isset($response->ratesAndServicesResponse)
+      && isset($response->ratesAndServicesResponse->statusCode)
+      && ($response->ratesAndServicesResponse->statusCode == 1)) {
+
+      return $response;
+    }
+    else {
+      watchdog('uc_canadapost',
+               'Shipping failed. Request was: !request, response was !response',
+               array(
+                 '!request'  => htmlentities($xml),
+                 '!response' => htmlentities($http_response->data),
+               ),
+               WATCHDOG_ERROR
+      );
+    }
+  }
+  else {
+    return FALSE;
+  }
+}
+
+
+
+/**
+ * Perform an HTTP request.
+ *
+ * This is a flexible and powerful HTTP client implementation. Correctly handles
+ * GET, POST, PUT or any other HTTP requests. Handles redirects.
+ *
+ * NOTE: this differs from drupal 5.2 drupal_http_request() only by the patch at http://drupal.org/node/183435
+ *
+ * @param $url
+ *   A string containing a fully qualified URI.
+ * @param $headers
+ *   An array containing an HTTP header => value pair.
+ * @param $method
+ *   A string defining the HTTP request to use.
+ * @param $data
+ *   A string containing data to include in the request.
+ * @param $retry
+ *   An integer representing how many times to retry the request in case of a
+ *   redirect.
+ * @return
+ *   An object containing the HTTP request headers, response code, headers,
+ *   data and redirect status.
+ */
+function _uc_canadapost_drupal_http_request($url, $headers = array(), $method = 'GET', $data = NULL, $retry = 3) {
+  $result = new stdClass();
+
+  // Parse the URL and make sure we can handle the schema.
+  $uri = parse_url($url);
+
+  if ($uri == FALSE) {
+    $result->error = 'unable to parse URL';
+    return $result;
+  }
+
+  if (!isset($uri['scheme'])) {
+    $result->error = 'missing schema';
+    return $result;
+  }
+
+  switch ($uri['scheme']) {
+    case 'http':
+      $port = isset($uri['port']) ? $uri['port'] : 80;
+      $host = $uri['host'] . ($port != 80 ? ':'. $port : '');
+      $fp = @fsockopen($uri['host'], $port, $errno, $errstr, 15);
+      break;
+    case 'https':
+      // Note: Only works for PHP 4.3 compiled with OpenSSL.
+      $port = isset($uri['port']) ? $uri['port'] : 443;
+      $host = $uri['host'] . ($port != 443 ? ':'. $port : '');
+      $fp = @fsockopen('ssl://'. $uri['host'], $port, $errno, $errstr, 20);
+      break;
+    default:
+      $result->error = 'invalid schema '. $uri['scheme'];
+      return $result;
+  }
+
+  // Make sure the socket opened properly.
+  if (!$fp) {
+    // When a network error occurs, we use a negative number so it does not
+    // clash with the HTTP status codes.
+    $result->code = -$errno;
+    $result->error = trim($errstr);
+
+    // Mark that this request failed. This will trigger a check of the web
+    // server's ability to make outgoing HTTP requests the next time that
+    // requirements checking is performed.
+    // @see system_requirements()
+    variable_set('drupal_http_request_fails', TRUE);
+
+    return $result;
+  }
+
+  // Construct the path to act on.
+  $path = isset($uri['path']) ? $uri['path'] : '/';
+  if (isset($uri['query'])) {
+    $path .= '?'. $uri['query'];
+  }
+
+  // Create HTTP request.
+  $defaults = array(
+    // RFC 2616: "non-standard ports MUST, default ports MAY be included".
+    // We don't add the port to prevent from breaking rewrite rules checking
+    // the host that do not take into account the port number.
+    'Host'           => "Host: $host",
+    'User-Agent'     => 'User-Agent: Drupal (+http://drupal.org/)',
+    'Content-Length' => 'Content-Length: '. strlen($data)
+  );
+
+  // If the server url has a user then attempt to use basic authentication
+  if (isset($uri['user'])) {
+    $defaults['Authorization'] = 'Authorization: Basic '. base64_encode($uri['user'] . (!empty($uri['pass']) ? ":". $uri['pass'] : ''));
+  }
+
+  foreach ($headers as $header => $value) {
+    $defaults[$header] = $header .': '. $value;
+  }
+
+  $request = $method .' '. $path ." HTTP/1.1\r\n";
+  $request .= implode("\r\n", $defaults);
+  $request .= "\r\n\r\n";
+  $request .= $data;
+
+  $result->request = $request;
+
+  fwrite($fp, $request);
+
+  // Fetch response.
+  $response = '';
+  while (!feof($fp) && $chunk = fread($fp, 1024)) {
+    $response .= $chunk;
+  }
+  fclose($fp);
+
+  // Parse response.
+  list($split, $result->data) = preg_split("/\r\n\r\n|\n\n|\r\r/", $response, 2);
+  $split = preg_split("/\r\n|\n|\r/", $split);
+
+  list($protocol, $code, $text) = explode(' ', trim(array_shift($split)), 3);
+  $result->headers = array();
+
+  // Parse headers.
+  while ($line = trim(array_shift($split))) {
+    list($header, $value) = explode(':', $line, 2);
+    if (isset($result->headers[$header]) && $header == 'Set-Cookie') {
+      // RFC 2109: the Set-Cookie response header comprises the token Set-
+      // Cookie:, followed by a comma-separated list of one or more cookies.
+      $result->headers[$header] .= ','. trim($value);
+    }
+    else {
+      $result->headers[$header] = trim($value);
+    }
+  }
+
+  $responses = array(
+    100 => 'Continue', 101 => 'Switching Protocols',
+    200 => 'OK', 201 => 'Created', 202 => 'Accepted', 203 => 'Non-Authoritative Information', 204 => 'No Content', 205 => 'Reset Content', 206 => 'Partial Content',
+    300 => 'Multiple Choices', 301 => 'Moved Permanently', 302 => 'Found', 303 => 'See Other', 304 => 'Not Modified', 305 => 'Use Proxy', 307 => 'Temporary Redirect',
+    400 => 'Bad Request', 401 => 'Unauthorized', 402 => 'Payment Required', 403 => 'Forbidden', 404 => 'Not Found', 405 => 'Method Not Allowed', 406 => 'Not Acceptable', 407 => 'Proxy Authentication Required', 408 => 'Request Time-out', 409 => 'Conflict', 410 => 'Gone', 411 => 'Length Required', 412 => 'Precondition Failed', 413 => 'Request Entity Too Large', 414 => 'Request-URI Too Large', 415 => 'Unsupported Media Type', 416 => 'Requested range not satisfiable', 417 => 'Expectation Failed',
+    500 => 'Internal Server Error', 501 => 'Not Implemented', 502 => 'Bad Gateway', 503 => 'Service Unavailable', 504 => 'Gateway Time-out', 505 => 'HTTP Version not supported'
+  );
+  // RFC 2616 states that all unknown HTTP codes must be treated the same as
+  // the base code in their class.
+  if (!isset($responses[$code])) {
+    $code = floor($code / 100) * 100;
+  }
+
+  switch ($code) {
+    case 200: // OK
+    case 304: // Not modified
+      break;
+    case 301: // Moved permanently
+    case 302: // Moved temporarily
+    case 307: // Moved temporarily
+      $location = $result->headers['Location'];
+
+      if ($retry) {
+        $result = drupal_http_request($result->headers['Location'], $headers, $method, $data, --$retry);
+        $result->redirect_code = $result->code;
+      }
+      $result->redirect_url = $location;
+
+      break;
+    default:
+      $result->error = $text;
+  }
+
+  $result->code = $code;
+  return $result;
+}
+
+
+/**
+ * Convenience function to get Canada Post codes for their services.
+ * Latest service codes may be found at
+ * http://sellonline.canadapost.ca/DevelopersResources/protocolV3/ProductID.html
+ *
+ * @return
+ *   Array with service codes as keys and service names as values
+ */
+function _uc_canadapost_service_list() {
+  return array(
+    /* Domestic Products */
+    '1010' => t('Canada Post Regular'),
+    '1020' => t('Canada Post Expedited'),
+    '1030' => t('Canada Post Xpresspost'),
+    '1040' => t('Canada Post Priority Courier'),
+
+    /* US Products */
+    '2005' => t('Canada Post Small Packets Surface'),
+    '2015' => t('Canada Post Small Packets Air'),
+    '2020' => t('Canada Post Expedited US Business Contract'),
+    '2025' => t('Canada Post Expedited US Commercial'),
+    '2030' => t('Canada Post Xpresspost USA'),
+    '2040' => t('Canada Post Priority Worldwide USA'),
+    '2050' => t('Canada Post Priority Worldwide PAK USA'),
+
+    /* International Products */
+    '3005' => t('Canada Post Small Packets Surface'),
+    '3010' => t('Canada Post Surface International'),
+    '3015' => t('Canada Post Small Packets Air'),
+    '3020' => t('Canada Post Air International'),
+    '3025' => t('Canada Post Xpresspost International'),
+    '3040' => t('Canada Post Priority Worldwide International'),
+    '3050' => t('Canada Post Priority Worldwide PAK International'),
+  );
+
+  /* No longer supported? */
+  //'1120' => t('Canada Post Expedited Evening'),
+  //'1130' => t('Canada Post Xpresspost Evening'),
+  //'1220' => t('Canada Post Expedited Saturday'),
+  //'1230' => t('Canada Post Xpresspost Saturday'),
+}
+
+
+/**
+ * Utility routine to construct options for date format
+ *
+ * @return
+ *   Array of today's date in various formats
+ */
+function _uc_canadapost_get_date_options() {
+  $date_options = array(
+    'm/d/Y', 'd/m/Y', 'Y/m/d',
+    'D, M j, Y', 'D, M j', 'F j, Y',
+    'l, j F', 'l, F j',
+    'l, j F, Y', 'l, Y, F j', 'l, F j, Y'
+  );
+  $date_options_nice = array('' => t("Don't display estimate"));
+
+  foreach ($date_options as $datefmt) {
+    $date_options_nice[$datefmt] = t("Estimated delivery") .': '. date($datefmt);
+  }
+  return $date_options_nice;
+}
+
+
+/**
+ * Modify the rate received from CanadaPost before displaying to the customer.
+ *
+ * Rates are marked-up by a percentage, a multiplier, or an additional
+ * amount as per the settings in this modules administration menu.
+ *
+ * @return
+ *   A float containing the modified rate
+ */
+function uc_canadapost_markup($rate) {
+  $markup = variable_get('uc_canadapost_markup', '0');
+  $type   = variable_get('uc_canadapost_markup_type', 'percentage');
+  if (is_numeric(trim($markup))) {
+    switch ($type) {
+      case 'percentage':
+        return $rate + $rate * floatval(trim($markup)) / 100;
+      case 'multiplier':
+        return $rate * floatval(trim($markup));
+      case 'currency':
+        return $rate + floatval(trim($markup));
+    }
+  }
+  else {
+    return $rate;
+  }
+}
+
+
+/**
+ * Packages products so that each package weighs no more than 30kg
+ *
+ * @param $products
+ *   An array of nodes of type product
+ *
+ * @return
+ *   An array of package objects, each containing one or more of the products
+ */
+function _uc_canadapost_package_products($products) {
+  $packages = array();
+
+  // Create first package
+  $package  = new stdClass();
+  $package->weight = 0.0;
+
+  // Loop over products
+  foreach ($products as $product) {
+    // Get item weight
+    $item_weight = $product->weight * uc_weight_conversion($product->weight_units, 'kg');
+    if ($item_weight >= 30.0) {
+      // This product is too heavy to ship via Canada Post - quit with error
+      return array();
+    }
+    // Loop over qty of each product
+    for ($item=0; $item<$product->qty; $item++) {
+      // Test to see if putting this item into the current package put us
+      // over the weight limit
+      if (($package->weight + $item_weight) < 30.0) {
+        // No?  Then update the package information and continue
+        $package->quantity += 1;
+        $package->price    += $product->price;
+        $package->weight   += $item_weight;
+      }
+      else {
+        // If weight >= 30kg, save current package to array, start new package
+        // Round up to nearest kg for Canada Post weight
+        $package->shipweight = ceil($package->weight);
+        $packages[] = $package;
+
+        $package = new stdClass();
+        $package->quantity = 1;
+        $package->price    = $product->price;
+        $package->weight   = $item_weight;
+      }
+    }
+  }
+
+  // Save the partially-filled package to the array then exit
+  $package->shipweight = ceil($package->weight);
+  $packages[] = $package;
+
+  return $packages;
+}
+
+
+/**
+ * Utility function to determine province based on postal code.
+ *
+ * Not currently used by this module.
+ *
+ * FSA (= Forward Sortation Area) code is first three characters of
+ * postal code.  The first letter indicates the postal district, which
+ * has an almost 1 to 1 correspondence with province.  The exceptions
+ * are that NU and NT are in the same postal district, and ON and QC
+ * both have multiple districts.
+ *
+ * @param $postalcode
+ *   6-character postal code
+ * @return
+ *   2-character province name abbreviation
+ */
+function uc_canadapost_lookup_province($postalcode) {
+
+  $fsa = drupal_strtoupper(drupal_substr($postalcode, 0, 1));
+  $province = array(
+    'A' => 'NL',
+    'B' => 'NS',
+    'C' => 'PE',
+    'E' => 'NB',
+    'G' => 'QC',
+    'H' => 'QC',
+    'J' => 'QC',
+    'K' => 'ON',
+    'L' => 'ON',
+    'M' => 'ON',
+    'N' => 'ON',
+    'P' => 'ON',
+    'R' => 'MB',
+    'S' => 'SK',
+    'T' => 'AB',
+    'V' => 'BC',
+    'X' => 'NT',  // X is also NU, but we can only return one value here...
+    'Y' => 'YT',
+  );
+  return $province[$fsa];
+}

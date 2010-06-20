@@ -1,0 +1,109 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ *   Converts @usernames to themed usernames and #hashtags to themed taxonomy
+ *   terms on Facebook-style Statuses.
+ */
+
+/**
+ * Implementation of hook_schema().
+ */
+function facebook_status_tags_schema() {
+  $schema = array();
+  $schema['facebook_status_tags'] = array(
+    'description' => 'Stores term-to-status relationships.',
+    'fields' => array(
+      'sid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Status ID',
+      ),
+      'rid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => 0,
+        'description' => 'Reference ID (Term ID or User ID)',
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 40,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Reference type',
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Reference name',
+      ),
+    ),
+    'indexes' => array(
+      'sid' => array('sid'),
+      'rid' => array('rid'),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function facebook_status_tags_update_6201() {
+  $result = array();
+  //In the last few cycles, some bugs were fixed that could cause blank tags to
+  //be saved. Clean up that mess.
+  $result[] = update_sql("DELETE FROM {facebook_status_tags} WHERE name = ''");
+  return $result;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function facebook_status_tags_update_6202() {
+  $result = array();
+  //The current primary key causes errors when a user @mention and term #tag
+  //with the same ID exist in the same status.
+  db_drop_primary_key($result, 'facebook_status_tags');
+  return $result;
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function facebook_status_tags_install() {
+  drupal_install_schema('facebook_status_tags');
+  $message = st('Facebook-style Statuses Tags has been successfully installed.');
+  if (module_exists('taxonomy')) {
+    $message .= ' '. st('You should now <a href="!vocab">create a vocabulary</a> for use with #hashtags and <a href="!fbss">set FBSST to use it</a>.',
+      array('!vocab' => url('admin/content/taxonomy/add/vocabulary'),
+        '!fbss' => url('admin/settings/facebook_status/advanced'),
+      )
+    );
+  }
+  else {
+    $message .= ' '. st('Enabling the Taxonomy module now is recommended. Doing so will allow you to process #hashtags in status updates.');
+  }
+  drupal_set_message($message);
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function facebook_status_tags_uninstall() {
+  drupal_uninstall_schema('facebook_status_tags');
+  variable_del('facebook_status_tags_url');
+  variable_del('facebook_status_tags_vid');
+  variable_del('facebook_status_tags_time');
+  variable_del('facebook_status_tags_count');
+  //Although not deleting this leaves an unnecessary row in the variable table,
+  //it's a PITA for site admin to change its value, so it stays in case FBSST
+  //is ever installed again.
+  //variable_del('facebook_status_tags_alt_pattern');
+}
