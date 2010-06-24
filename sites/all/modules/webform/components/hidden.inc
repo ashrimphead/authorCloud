@@ -1,5 +1,5 @@
 <?php
-// $Id: hidden.inc,v 1.21.2.2 2010/03/11 01:40:15 quicksketch Exp $
+// $Id: hidden.inc,v 1.21.2.3 2010/06/21 03:35:13 quicksketch Exp $
 
 /**
  * @file
@@ -82,8 +82,17 @@ function _webform_display_hidden($component, $value, $format = 'html') {
     '#theme' => 'webform_display_hidden',
     '#theme_wrappers' => $format == 'text' ? array('webform_element_text') : array('webform_element'),
     '#post_render' => array('webform_element_wrapper'),
-    '#access' => user_access('edit all webform submissions') || user_access('access all webform results'),
   );
+
+  // TODO: This check is unusual. It shows hidden fields in e-mails but not
+  // when viewing in the browser unless you're an administrator. This should be
+  // a more logical check. See these related issues:
+  // http://drupal.org/node/313639
+  // http://drupal.org/node/781786
+  if ($format == 'html') {
+    $element['#access'] = user_access('edit all webform submissions') || user_access('access all webform results');
+  }
+
   return $element;
 }
 

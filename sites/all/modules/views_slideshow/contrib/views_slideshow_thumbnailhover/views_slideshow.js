@@ -1,4 +1,4 @@
-// $Id: views_slideshow.js,v 1.1.2.2.2.31 2010/05/18 05:16:07 redndahead Exp $
+// $Id: views_slideshow.js,v 1.1.2.2.2.34 2010/06/17 03:18:02 redndahead Exp $
 
 /**
  * @file
@@ -35,7 +35,7 @@ Drupal.behaviors.viewsSlideshowThumbnailHover = function (context) {
           $('#views_slideshow_thumbnailhover_image_count_' + settings.vss_id + ' span.total').html(opts.slideCount);
         }
       },
-      before:function(current, next) {
+      before:function(current, next, opts) {
         // Remember last slide.
         if (settings.remember_slide) {
           createCookie(settings.view_id, opts.currSlide + 1, settings.remember_slide_days);
@@ -145,7 +145,7 @@ Drupal.behaviors.viewsSlideshowThumbnailHover = function (context) {
     $(settings.targetId).cycle(settings.opts);
 
     // Start Paused
-    if (settings.start_pause) {
+    if (settings.start_paused) {
       viewsSlideshowThumbnailHoverPause(settings);
     }
 
@@ -226,7 +226,7 @@ function IsNumeric(sText) {
   var IsNumber=true;
   var Char;
 
-  for (i=0; i < sText.length && IsNumber == true; i++) { 
+  for (var i=0; i < sText.length && IsNumber == true; i++) { 
     Char = sText.charAt(i); 
     if (ValidChars.indexOf(Char) == -1) {
       IsNumber = false;

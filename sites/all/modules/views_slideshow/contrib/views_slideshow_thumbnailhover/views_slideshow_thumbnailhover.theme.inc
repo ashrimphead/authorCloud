@@ -1,5 +1,5 @@
 <?php
-// $Id: views_slideshow_thumbnailhover.theme.inc,v 1.1.2.1.2.35 2010/05/18 05:16:07 redndahead Exp $
+// $Id: views_slideshow_thumbnailhover.theme.inc,v 1.1.2.1.2.36 2010/06/04 03:52:24 redndahead Exp $
 
 /**
  * @file
@@ -26,6 +26,25 @@ function template_preprocess_views_slideshow_thumbnailhover(&$vars) {
     ),
     $options['views_slideshow_thumbnailhover']
   );
+
+  // We need to go through the current js setting values to make sure the one we
+  // want to add is not already there. If it is already there then append -[num]
+  // to the id to make it unique.
+  $slideshow_count = 1;
+  $current_settings = drupal_add_js();
+  foreach ($current_settings['setting'] AS $current_setting) {
+    if (isset($current_setting['viewsSlideshowThumbnailHover'])) {
+      $current_keys = array_keys($current_setting['viewsSlideshowThumbnailHover']);
+      if (stristr($current_keys[0], '#views_slideshow_thumbnailhover_main_' . $vss_id)) {
+        $slideshow_count++;
+      }
+    }
+  }
+
+  if ($slideshow_count > 1) {
+    $vss_id .= '-' . $slideshow_count;
+    $settings['vss_id'] = $vss_id;  
+  }
 
   drupal_add_js(array('viewsSlideshowThumbnailHover' => array(
     "#views_slideshow_thumbnailhover_main_" . $vss_id => $settings)), 'setting');

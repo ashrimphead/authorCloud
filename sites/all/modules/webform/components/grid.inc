@@ -1,5 +1,5 @@
 <?php
-// $Id: grid.inc,v 1.14.2.7 2010/05/16 23:24:33 quicksketch Exp $
+// $Id: grid.inc,v 1.14.2.8 2010/06/20 18:10:33 quicksketch Exp $
 
 /**
  * @file
@@ -34,7 +34,7 @@ function _webform_defaults_grid() {
 
 
 /**
- * Implementation of _webform_help_grid().
+ * Implementation of _webform_theme_component().
  */
 function _webform_theme_grid() {
   return array(

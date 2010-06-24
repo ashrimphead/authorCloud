@@ -1,5 +1,5 @@
 <?php
-// $Id: views_slideshow_singleframe.views_slideshow.inc,v 1.1.2.1.2.22 2010/05/10 05:35:39 redndahead Exp $
+// $Id: views_slideshow_singleframe.views_slideshow.inc,v 1.1.2.1.2.24 2010/06/06 22:47:45 redndahead Exp $
 
 /**
  * @file
@@ -54,7 +54,7 @@ function views_slideshow_singleframe_views_slideshow_options_form(&$form, &$form
     '#type' => 'textfield',
     '#title' => t('Timer delay'),
     '#default_value' => $view->options['views_slideshow_singleframe']['timeout'],
-    '#description' => t('Amount of time in milliseconds between transitions.')
+    '#description' => t('Amount of time in milliseconds between transitions. Set the value to 0 to not rotate the slideshow automatically.')
   );
   $form['views_slideshow_singleframe']['delay'] = array(
     '#type' => 'textfield',
@@ -219,7 +219,7 @@ function views_slideshow_singleframe_views_slideshow_options_form(&$form, &$form
     '#type' => 'textarea',
     '#title' => t('Advanced Options'),
     '#default_value' => $view->options['views_slideshow_singleframe']['advanced'],
-    '#description' => t('Add other jQuery cycle options one per line.  Ex. height: 350  !url', array('!url' => l('Click here for the additional options to add.', 'http://malsup.com/jquery/cycle/options.html'))),
+    '#description' => t('Add other jQuery cycle options one per line.  Ex. height: 350  !url', array('!url' => l(t('Click here for the additional options to add.'), 'http://malsup.com/jquery/cycle/options.html'))),
   );
   $form['views_slideshow_singleframe']['ie'] = array(
     '#type' => 'fieldset',

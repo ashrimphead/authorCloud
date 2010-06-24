@@ -1,5 +1,5 @@
 <?php
-// $Id: views_slideshow_plugin_style_slideshow.inc,v 1.1.2.1.2.10 2010/05/03 03:25:19 redndahead Exp $
+// $Id: views_slideshow_plugin_style_slideshow.inc,v 1.1.2.1.2.11 2010/06/06 04:28:42 redndahead Exp $
 
 /**
  * @file
@@ -82,10 +82,6 @@ class views_slideshow_plugin_style_slideshow extends views_plugin_style_list {
           '#value' => '</div></div>',
         );
       }
-      
-      $form['main_wrapper_close'] = array(
-        '#value' => '</div>',
-      );
     }
     else {
       $form['enable_module'] = array(

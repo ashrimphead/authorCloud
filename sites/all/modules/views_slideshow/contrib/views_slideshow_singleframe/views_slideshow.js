@@ -1,4 +1,4 @@
-// $Id: views_slideshow.js,v 1.1.2.1.2.34 2010/05/18 05:16:07 redndahead Exp $
+// $Id: views_slideshow.js,v 1.1.2.1.2.38 2010/06/09 06:13:36 redndahead Exp $
 
 /**
  *  @file
@@ -106,7 +106,7 @@ Drupal.behaviors.viewsSlideshowSingleFrame = function (context) {
     // Pause on clicking of the slide.
     if (settings.pause_on_click == 1) {
       $('#views_slideshow_singleframe_teaser_section_' + settings.vss_id).click(function() { 
-        viewsSlideshowPause(settings);
+        viewsSlideshowSingleFramePause(settings);
       });
     }
 
@@ -160,7 +160,7 @@ Drupal.behaviors.viewsSlideshowSingleFrame = function (context) {
     $(settings.targetId).cycle(settings.opts);
 
     // Start Paused
-    if (settings.start_pause) {
+    if (settings.start_paused) {
       viewsSlideshowSingleFramePause(settings);
     }
 
@@ -223,8 +223,12 @@ Drupal.theme.prototype.viewsSlideshowPagerThumbnails = function (classes, idx, s
   return '<div class="' + classes + '"><a href="' + href + '"><img src="' + $(slide).find('img').attr('src') + '" /></a></div>';
 }
 
-Drupal.theme.prototype.viewsSlideshowPagerNumbered = function (classes, idx, slide) {
-  return '<div class="' + classes + '"><a href="#">' + (idx+1) + '</a></div>';
+Drupal.theme.prototype.viewsSlideshowPagerNumbered = function (classes, idx, slide, settings) {
+  var href = '#';
+  if (settings.pager_click_to_page) {
+    href = $(slide).find('a').attr('href');
+  }
+  return '<div class="' + classes + '"><a href="' + href + '">' + (idx+1) + '</a></div>';
 }
 
 // Verify that the value is a number.
@@ -233,7 +237,7 @@ function IsNumeric(sText) {
   var IsNumber=true;
   var Char;
 
-  for (i=0; i < sText.length && IsNumber == true; i++) { 
+  for (var i=0; i < sText.length && IsNumber == true; i++) { 
     Char = sText.charAt(i); 
     if (ValidChars.indexOf(Char) == -1) {
       IsNumber = false;

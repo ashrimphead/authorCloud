@@ -1,5 +1,5 @@
 <?php
-// $Id: webform.submissions.inc,v 1.18.2.7 2010/06/18 04:14:28 quicksketch Exp $
+// $Id: webform.submissions.inc,v 1.18.2.8 2010/06/21 04:40:21 quicksketch Exp $
 
 /**
  * @file
@@ -234,7 +234,7 @@ function webform_submission_render($node, $submission, $email, $format) {
   // Recursively add components to the form.
   foreach ($component_tree['children'] as $cid => $component) {
     if (!in_array($cid, $excluded_components) && _webform_client_form_rule_check($node, $component, $component['page_num'], NULL, $submission)) {
-      _webform_client_form_add_component($component, NULL, $renderable, $renderable, $submission, $format);
+      _webform_client_form_add_component($node, $component, NULL, $renderable, $renderable, NULL, $submission, $format);
     }
   }
 
