@@ -1,5 +1,5 @@
 <?php
-// $Id: spaces.views.inc,v 1.1.2.6.2.2 2009/04/21 22:04:08 yhahn Exp $
+// $Id: spaces.views.inc,v 1.1.2.6.2.2.2.3 2010/01/11 07:12:07 yhahn Exp $
 
 /**
  * Implementation of hook_views_plugins().
@@ -10,11 +10,11 @@ function spaces_views_plugins() {
     'access' => array(
       'spaces_feature' => array(
         'title' => t('Spaces feature'),
-        'help' => t('Access will be granted to users with the specified permission string.'),
+        'help' => t('Access will be granted if the given feature is enabled in the current space.'),
         'handler' => 'spaces_plugin_access_spaces_feature',
         'path' => drupal_get_path('module', 'spaces') .'/includes',
         'uses options' => TRUE,
-      ),      
+      ),
     ),
   );
 }
@@ -28,15 +28,9 @@ function spaces_views_handlers() {
       'path' => drupal_get_path('module', 'spaces') .'/includes',
     ),
     'handlers' => array(
-      'spaces_handler_filter_spaces_current' => array(
-        'parent' => 'views_handler_filter',
-       ),
-      'spaces_handler_filter_spaces_feature' => array(
-        'parent' => 'views_handler_filter',
-      ),
-      'spaces_handler_field_spaces_feature' => array(
-        'parent' => 'views_handler_field_node_type',
-       ),
+      'spaces_handler_filter_spaces_current' => array('parent' => 'views_handler_filter'),
+      'spaces_handler_filter_spaces_feature' => array('parent' => 'views_handler_filter'),
+      'spaces_handler_field_spaces_feature' => array('parent' => 'views_handler_field_node_type'),
     ),
   );
 }
@@ -53,23 +47,16 @@ function spaces_views_data() {
   $data['spaces']['table']['join'] = array(
     'node' => array(
       'left_field' => 'nid',
-      'field' => 'sid',
+      'field' => 'id',
     ),
     'users' => array(
       'left_field' => 'uid',
-      'field' => 'sid',
+      'field' => 'id',
     ),
   );
   $data['spaces']['current'] = array(
-    'title' => t('Node in current space'),
-    'help' => t('Posts in current space.'),
-    'filter' => array(
-      'handler' => 'spaces_handler_filter_spaces_current',
-    ),
-  );
-  $data['spaces']['users_current'] = array(
-    'title' => t('User in current space'),
-    'help' => t('Users in current space.'),
+    'title' => t('Content in current space'),
+    'help' => t('Filters content to only those that belong to the current space.'),
     'filter' => array(
       'handler' => 'spaces_handler_filter_spaces_current',
     ),
@@ -91,7 +78,6 @@ function spaces_views_data() {
       'handler' => 'spaces_handler_field_spaces_feature',
     ),
   );
-
   return $data;
 }
 
