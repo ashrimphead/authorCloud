@@ -1,5 +1,5 @@
 <?php
-// $Id: phone.eg.inc,v 1.9 2010/05/26 13:54:56 thierrygd Exp $
+// $Id: phone.eg.inc,v 1.10 2010/07/19 22:34:08 thierrygd Exp $
 
 /* 2009/10/24, Ahmad Gharbeia: initial release
 

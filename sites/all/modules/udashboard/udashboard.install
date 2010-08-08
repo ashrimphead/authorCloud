@@ -1,0 +1,19 @@
+<?php
+// $Id: udashboard.install,v 1.1 2009/05/03 07:56:56 lelizondob Exp $
+
+/**
+ * hook_uninstall()
+ */
+function udashboard_uninstall() {
+	variable_del('udashboard_commentsmsg');
+	variable_del('udashboard_definecomments');
+	variable_del('udashboard_definetracker');
+	variable_del('udashboard_defineviews_comments');
+	variable_del('udashboard_defineviews_tracker');
+	variable_del('udashboard_nodeaddmsg');
+	variable_del('udashboard_showdescription');
+	variable_del('udashboard_trackermsg');
+	variable_del('udashboard_usepopups');
+	variable_del('udashboard_usersmsg');
+	variable_del('udashboard_welcomemsg');
+}

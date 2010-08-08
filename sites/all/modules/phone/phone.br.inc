@@ -1,5 +1,5 @@
 <?php
-// $Id: phone.br.inc,v 1.11 2010/05/26 13:54:56 thierrygd Exp $
+// $Id: phone.br.inc,v 1.12 2010/07/19 22:34:08 thierrygd Exp $
 
 /**
  * @file
@@ -23,8 +23,7 @@ function phone_br_metadata() {
  */
 function valid_br_phone_number($phonenumber) {
 
-  //$phonenumber = trim($phonenumber);
-
+  $phonenumber = trim($phonenumber);
 /*
   $phonenumber  = str_replace(array(' ','-','(',')'), '', $phonenumber);
 */

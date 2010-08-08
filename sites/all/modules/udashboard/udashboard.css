@@ -1,0 +1,8 @@
+/* $Id: udashboard.css,v 1.1 2009/05/03 07:56:56 lelizondob Exp $ */
+
+#tracker td.replies {
+  text-align: center;
+}
+#tracker table {
+  width: 100%;
+}

@@ -1,0 +1,12 @@
+; $Id: udashboard.info,v 1.1 2009/05/03 07:56:56 lelizondob Exp $
+name = User Dashboard
+description = Presents the low-admin user with an administration UI.
+core = 6.x
+package = User Dashboard
+
+; Information added by drupal.org packaging script on 2010-07-11
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "udashboard"
+datestamp = "1278836141"
+

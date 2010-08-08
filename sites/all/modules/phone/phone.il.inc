@@ -1,5 +1,5 @@
 <?php
-// $Id: phone.il.inc,v 1.6 2010/05/26 13:54:56 thierrygd Exp $
+// $Id: phone.il.inc,v 1.7 2010/07/19 22:34:08 thierrygd Exp $
 //drived from au module and manipulated by Moshe Beeri, email: moshe.beeri (at-shetrudel) google mail
 
 /**

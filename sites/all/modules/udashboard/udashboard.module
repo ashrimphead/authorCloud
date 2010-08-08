@@ -1,0 +1,120 @@
+<?php
+// $Id: udashboard.module,v 1.1 2009/05/03 07:56:56 lelizondob Exp $
+
+/**
+ * @file
+ * Main Module page.
+ */
+
+/**
+ * Implementation of hook_help()
+ */
+function udashboard_help($path, $arg) {
+  switch ($path) {
+    case 'admin/settings/udashboard':
+      return t('You can customize what tracker to use and what comments area to use, including the help messages to show to the users. If you want to add your own tabs to the User Dashboard page, follow the example in dashboard.tabs.inc.');
+  }
+}
+
+/**
+ * Implementation of hook_perm()
+ */
+function udashboard_perm() {
+  return array('administer udashboard', 'access udashboard', 'access udashboard comments', 'access udashboard add content page', 'access udashboard users');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function udashboard_menu() {
+  $commentsmenu = variable_get('udashboard_definecomments', '');
+  if ($commentsmenu == 0) {
+  	// simple comments, with views
+  	$commentsmenutype = MENU_LOCAL_TASK;
+  }
+  if ($commentsmenu == 1) {
+  	// advanced comments
+  	$commentsmenutype = MENU_LOCAL_TASK;
+  }
+  if ($commentsmenu == 2) {
+  	// hide comments
+  	$commentsmenutype = MENU_CALLBACK;
+  }
+
+  $items['udashboard'] = array(
+    'title' => 'My Dashboard',
+    'page callback' => 'udashboard_viewstracker',
+    'access callback' => 'udashboard_tracker_user_access',
+    'access arguments' => array(array('access content', 'access udashboard')),
+    'weight' => 0,
+    'file' => 'udashboard.tabs.inc',
+  );
+  $items['udashboard/all'] = array(
+    'title' => 'Start',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['udashboard/comments'] = array(
+    'title' => 'Comments',
+    'page callback' => 'udashboard_comments',
+    'access callback' => 'udashboard_comments_user_access',
+    'access arguments' => array(array('administer comments', 'access udashboard', 'access udashboard comments')),
+    'type' => $commentsmenutype,
+    'weight' => 3,
+    'file' => 'udashboard.tabs.inc'
+  );
+  $items['udashboard/add'] = array(
+    'title' => 'Create content',
+    'page callback' => 'udashboard_node_add_page',
+    'access arguments' => array('access udashboard'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 4,
+    'file' => 'udashboard.add.inc'
+  );
+  $items['udashboard/user'] = array(
+    'title' => 'Users',
+    'description' => 'List, add, and edit users.',
+    'page callback' => 'udashboard_user_admin',
+    'page arguments' => array('list'),
+    'access callback' => 'udashboard_user_user_access',
+    'access arguments' => array(array('administer users', 'access udashboard', 'access udashboard users')),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5,
+    'file' => 'udashboard.user.inc'
+  );
+  $items['admin/settings/udashboard'] = array(
+    'title' => 'User Dashboard',
+    'description' => 'Custom administration area for low-level admin users.',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('administer udashboard'),
+    'page arguments' => array('udashboard_admin'),
+    'file' => 'udashboard.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * user_access callback for menu
+ *
+ * case: administer users
+ */
+function udashboard_user_user_access() {
+	return user_access('administer users') && user_access('access udashboard') && user_access('access udashboard users');  
+}
+
+/**
+ * user_access callback for menu
+ *
+ * case: administer comments
+ */
+function udashboard_comments_user_access() {
+	return user_access('administer comments') && user_access('access udashboard') && user_access('access udashboard comments');  
+}
+
+/**
+ * user_access callback for menu
+ *
+ * case: access content
+ */
+function udashboard_tracker_user_access() {
+	return user_access('access content') && user_access('access udashboard');  
+}
