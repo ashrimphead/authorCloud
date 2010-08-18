@@ -1,5 +1,5 @@
 <?php
-// $Id: time.inc,v 1.24.2.8 2010/03/26 00:09:10 quicksketch Exp $
+// $Id: time.inc,v 1.24.2.9 2010/06/30 04:27:14 quicksketch Exp $
 
 /**
  * @file
@@ -251,7 +251,7 @@ function _webform_display_time($component, $value, $format = 'html') {
  */
 function theme_webform_display_time($element) {
   $output = ' ';
-  if ($element['#value']['hour'] && $element['#value']['minute']) {
+  if (isset($element['#value']['hour']) && isset($element['#value']['minute'])) {
     if ($element['#hourformat'] == '24-hour') {
       $output = sprintf('%02d', $element['#value']['hour']) . ':' . sprintf('%02d', $element['#value']['minute']);
     }

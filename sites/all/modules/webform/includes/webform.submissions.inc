@@ -1,5 +1,5 @@
 <?php
-// $Id: webform.submissions.inc,v 1.18.2.8 2010/06/21 04:40:21 quicksketch Exp $
+// $Id: webform.submissions.inc,v 1.18.2.10 2010/08/15 16:04:56 quicksketch Exp $
 
 /**
  * @file
@@ -262,6 +262,12 @@ function webform_get_submissions($filters = array(), $header = NULL, $pager_coun
     $filters = array('nid' => $filters);
   }
 
+  // UID filters need to be against a specific table.
+  if (isset($filters['uid'])) {
+    $filters['u.uid'] = $filters['uid'];
+    unset($filters['uid']);
+  }
+
   // No need to find SIDs if it was given to us.
   if (isset($filters['sid'])) {
     $sids = array($filters['sid']);
@@ -284,7 +290,7 @@ function webform_get_submissions($filters = array(), $header = NULL, $pager_coun
     }
 
     $where_clause = implode(' AND ', $where);
-    $pager_query = 'SELECT sid FROM {webform_submissions} WHERE ' . $where_clause;
+    $pager_query = 'SELECT sid FROM {webform_submissions} s LEFT JOIN {users} u ON u.uid = s.uid WHERE ' . $where_clause;
 
     if (is_array($header)) {
       $pager_query .= tablesort_sql($header);

@@ -1,5 +1,5 @@
 <?php
-// $Id: webform_hooks.php,v 1.9.2.5 2010/06/18 04:14:28 quicksketch Exp $
+// $Id: webform_hooks.php,v 1.9.2.6 2010/07/27 06:22:05 quicksketch Exp $
 
 /**
  * @file
@@ -467,7 +467,7 @@ function _webform_submit_component($component, $value) {
  *
  * @param $component
  *   A Webform component array.
- * @param $data
+ * @param $value
  *   An array of information containing the submission result, directly
  *   correlating to the webform_submitted_data database schema.
  */

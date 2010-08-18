@@ -1,5 +1,5 @@
 <?php
-// $Id: webform.emails.inc,v 1.9.2.5 2010/04/10 22:02:09 quicksketch Exp $
+// $Id: webform.emails.inc,v 1.9.2.8 2010/08/16 16:15:43 quicksketch Exp $
 
 /**
  * @file
@@ -12,6 +12,8 @@
  * Overview form of all components for this webform.
  */
 function webform_emails_form($form_state, $node) {
+  module_load_include('inc', 'webform', 'includes/webform.components');
+
   $form = array(
     '#tree' => TRUE,
     '#node' => $node,
@@ -57,6 +59,7 @@ function webform_emails_form($form_state, $node) {
   $form['add']['email_custom'] = array(
     '#type' => 'textfield',
     '#size' => 24,
+    '#maxlength' => 500,
   );
 
   $form['add']['email_component'] = array(
@@ -166,6 +169,8 @@ function webform_emails_form_submit($form, &$form_state) {
  * Form for configuring an e-mail setting and template.
  */
 function webform_email_edit_form($form_state, $node, $email = array()) {
+  module_load_include('inc', 'webform', 'includes/webform.components');
+
   $form = array(
     '#tree' => TRUE,
   );
@@ -220,6 +225,7 @@ function webform_email_edit_form($form_state, $node, $email = array()) {
       '#type' => 'textfield',
       '#size' => 40,
       '#default_value' => (!is_numeric($email[$field]) && $email[$field] != 'default') ? $email[$field] : NULL,
+      '#maxlength' => $field == 'email' ? 500 : 255,
     );
     $options = webform_component_list($node, $field == 'from_address' || $field == 'email' ? 'email_address' : 'email_name', FALSE);
     $form[$field . '_component'] = array(

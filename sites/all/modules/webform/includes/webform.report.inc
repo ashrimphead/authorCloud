@@ -1,13 +1,11 @@
 <?php
-// $Id: webform.report.inc,v 1.16.2.4 2010/06/21 03:07:07 quicksketch Exp $
+// $Id: webform.report.inc,v 1.16.2.7 2010/08/14 21:11:42 quicksketch Exp $
 
 /**
  * @file
  * This file includes helper functions for creating reports for webform.module
  *
  * @author Nathan Haug <nate@lullabot.com>
- * @author Pontus Ullgren <ullgren@user.sourceforge.net>
- * @copyright Pontus Ullgren 2004
  */
 
 // All functions within this file need the webform.submissions.inc.
@@ -319,6 +317,7 @@ function webform_results_clear_form_submit($form, &$form_state) {
  */
 function webform_results_download_form(&$form_state, $node) {
   module_load_include('inc', 'webform', 'includes/webform.export');
+  module_load_include('inc', 'webform', 'includes/webform.components');
 
   $form = array();
 
@@ -374,6 +373,7 @@ function webform_results_download_form(&$form_state, $node) {
     'serial' => '-' . t('Submission Number'),
     'sid' => '-' . t('Submission ID'),
     'time' => '-' . t('Time'),
+    'draft' => '-' . t('Draft'),
     'ip_address' => '-' . t('IP Address'),
     'uid' => '-' . t('User ID'),
     'username' => '-' . t('Username'),
@@ -488,11 +488,13 @@ function theme_webform_results_download_select_format($element) {
  */
 function webform_results_download($node, $format = 'delimiter', $options = array()) {
   module_load_include('inc', 'webform', 'includes/webform.export');
+  module_load_include('inc', 'webform', 'includes/webform.components');
 
   $submission_information = array(
     'serial' => t('Serial'),
     'sid' => t('SID'),
     'time' => t('Time'),
+    'draft' => t('Draft'),
     'ip_address' => t('IP Address'),
     'uid' => t('UID'),
     'username' => t('Username'),
@@ -567,6 +569,9 @@ function webform_results_download($node, $format = 'delimiter', $options = array
     }
     if (isset($submission_information['time'])) {
       $row[] = format_date($submission->submitted, 'small');
+    }
+    if (isset($submission_information['draft'])) {
+      $row[] = $submission->is_draft;
     }
     if (isset($submission_information['ip_address'])) {
       $row[] =  $submission->remote_addr;

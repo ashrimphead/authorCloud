@@ -4,9 +4,9 @@ description = "Provides tools for using persistant URL pieces"
 core = 6.x
 dependencies[] = ctools
 
-; Information added by drupal.org packaging script on 2010-05-27
-version = "6.x-1.0-beta12"
+; Information added by drupal.org packaging script on 2010-08-10
+version = "6.x-1.0-beta13"
 core = "6.x"
 project = "purl"
-datestamp = "1274926810"
+datestamp = "1281477392"
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: webform.components.inc,v 1.25.2.13 2010/04/10 22:02:09 quicksketch Exp $
+// $Id: webform.components.inc,v 1.25.2.17 2010/08/14 21:02:25 quicksketch Exp $
 
 /**
  * @file
@@ -198,7 +198,7 @@ function theme_webform_components_form($form) {
         l(t('Delete'), 'node/' . $node->nid . '/webform/components/' . $cid . '/delete', array('query' => drupal_get_destination())),
       );
       $row_class = 'draggable';
-      if (!webform_component_feature($component['type'], 'group') && $component['type'] != 'pagebreak') {
+      if (!webform_component_feature($component['type'], 'group')) {
         $row_class .= ' tabledrag-leaf';
       }
       if ($component['type'] == 'pagebreak') {
@@ -688,8 +688,8 @@ function webform_component_delete($node, $component) {
   // Delete all elements under this element.
   $result = db_query('SELECT cid FROM {webform_component} WHERE nid = %d AND pid = %d', $node->nid, $component['cid']);
   while ($row = db_fetch_object($result)) {
-    $component = $node->webform['components'][$row->cid];
-    webform_component_delete($node, $component);
+    $child_component = $node->webform['components'][$row->cid];
+    webform_component_delete($node, $child_component);
   }
 
   // Post-delete actions.
@@ -759,17 +759,18 @@ function webform_component_list($node, $component_filter = NULL, $indent = TRUE,
   $feature = is_string($component_filter) ? $component_filter : NULL;
 
   foreach ($components as $cid => $component) {
-    if (!isset($feature) || webform_component_feature($component['type'], $feature)) {
+    if (!isset($feature) || webform_component_feature($component['type'], $feature) || ($indent && webform_component_feature($component['type'], 'group'))) {
       $prefix = '';
       $page_num = $component['page_num'];
+      $page_index = 'p' . $page_num;
       if ($indent && ($parent_count = count(webform_component_parent_keys($node, $component)) - 1)) {
         $prefix = str_repeat('-', $parent_count);
       }
       if ($optgroups && $component['type'] == 'pagebreak') {
-        $page_names[$page_num] = $component['name'];
+        $page_names[$page_index] = $component['name'];
       }
       elseif ($optgroups && $page_num > 1) {
-        $options[$page_num][$cid] = $prefix . $component['name'];
+        $options[$page_index][$cid] = $prefix . $component['name'];
       }
       else {
         $options[$cid] = $prefix . $component['name'];
