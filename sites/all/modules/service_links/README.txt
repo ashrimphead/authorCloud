@@ -1,8 +1,9 @@
 Drupal service_links module:
 ------------------------
+Co Mantainer: Fabio Mucciante aka TheCrow
 Current Maintainer: Sivanandhan, P. apsivam .at. apsivam .dot. in
 Original Author: Fredrik Jonsson fredrik at combonet dot se
-Requires - Drupal 4.7 or higher
+Requires - Drupal 6
 License - GPL (see LICENSE)
 
 
@@ -10,15 +11,21 @@ Overview:
 --------
 The service links module enables admins to add the following
 links to nodes:
+* Buzz - Buzz up this post on Yahoo! Buzz
 * del.icio.us - Bookmark this post on del.icio.us
 * Digg - Submit this post on digg.com
+* Facebook - Submit this URL on Facebook
 * Furl - Submit this post on Furl
 * Google - Bookmark this post on Google
 * IceRocket - Search IceRocket for links to this post
+* LinkedIn - Add this post on LinkedIn
 * ma.gnolia.com - Bookmark this post on ma.gnolia.com
 * Newsvine - Submit this post on Newsvine
+* PubSub - Search PubSub for links to this post
 * Reddit - Submit this post on reddit.com
+* StumbleUpon - Bookmark this post on StumbleUpon
 * Technorati - Search Technorati for links to this post
+* Twitter - Submit this post on Twitter
 * Yahoo - Bookmark this post on Yahoo
 
 The site owner can deside:
@@ -35,14 +42,14 @@ The site owner can deside:
 
 Installation and configuration:
 ------------------------------
-Installation is as simple as creating a directory named 
-'service_links' in your 'modules' directory and
-copying the module and the images into it, then 
-enabling the module at 'administer >> modules'.
+Copy the whole 'service_links' folder
+under your 'modules' directory and then 
+enable the module at 'administer >> modules'.
+Go to 'administer >> access control' for allow
+users to watch the links.
 
-For configuration options go to 'administer >> settings >> service_links'.
-
-For permisson settings go to 'administer >> access control'.
+For configuration options go to 'administer >> settings
+>> service_links'.
 
 
 Add links to new services:
@@ -57,11 +64,12 @@ at the end.
 
 Include service links in your theme:
 -----------------------------------
-In the included template.php file there are an example how to insert
+In the included template.php file there  an example how to insert
 the service links in to a PHPTemplate theme. Remember to place the
-template.php file in the folder of your theme.
+template.php file in the folder of your theme or integrate it with 
+the content of 'template.php' provided from your theme.
 
 
 Last updated:
 ------------
-$Id: README.txt,v 1.11 2008/01/31 17:47:09 apsivam Exp $
+$Id: README.txt,v 1.11.2.2 2009/03/20 10:54:01 thecrow Exp $

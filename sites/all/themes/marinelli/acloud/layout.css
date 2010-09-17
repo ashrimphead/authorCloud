@@ -24,10 +24,22 @@ body {
 	
 /* The entire template's width is set in this class. */
 }
+#publish_now {
+text-align: center;}
+
+#publish_now a{
+text-transform: uppercase;
+font-size: 1.6em;
+line-height: 1em;
+margin:0px;
+text-align: center;
+font-weight: bold;}
+
+
 
 #utilities {
 	padding:0;
-	margin:0 auto;
+	margin:40px auto 0 auto;
 	width:970px;
 
 	
@@ -37,9 +49,10 @@ body {
 }
 
 #header {
+background-color: white;
 	padding:0;
 	margin:0;
-	height:270px;
+	height:200px;
 	position:relative;
 	-moz-border-radius: 10px;
 }
@@ -78,7 +91,7 @@ float:left;
 
 	
 /*wrapper:defines whole content margins*/
-	margin:15px;
+	margin:15px 0 15px 0;
 }
 
 #primary {
@@ -90,7 +103,7 @@ float:left;
 }
 
 .short {
-	width:550px;
+	width:580px;
 
 	
 /* if we don't have the second sidebar */
@@ -124,7 +137,7 @@ float:left;
 }
 
 #primary .singlepage {
-	padding:0 30px 15px;
+	padding:0 40px 15px 40px;
 }
 
 .preview .node {
@@ -198,6 +211,7 @@ float:left;
 
 	
 /*- Primary links in Header */
+
 	position:absolute;
 	left:-7px;
 	bottom:0!important;
@@ -282,12 +296,12 @@ form#user-login-form label {
 }
 
 .defaultblock .blockcontent,.loginblock .blockcontent {
-	padding:0 10px;
+	padding:0 0px;
 }
 
 .defaultblock h2 {
-	padding:8px 4px 0 12px;
-	margin-bottom:10px;
+	padding:0px 4px 6px 0px;
+	margin-bottom:0px;
 }
 
 .loginblock h2 {
@@ -344,7 +358,7 @@ form#user-login-form label {
 }
 
 #primary .singlepage h1 {
-	margin-bottom:12px;
+	margin-bottom:0px;
 }
 
 #primary .singlepage h2.with-tabs {
@@ -442,11 +456,16 @@ form#user-login-form label {
 
 .view-content {
 	clear:both;
-	margin-bottom:50px;
+	margin-bottom:0px;
+}
+
+#primary .view-content {
+margin-bottom: 10px;
+padding-bottom: 0px;
 }
 
 .item-list {
-	width:45%;
+	width:85%;
 	margin-right:5%;
 	float:left;
 }
@@ -480,7 +499,7 @@ form#user-login-form label {
 }
 
 .rsidebar ul.menu li,.rsidebar .item-list ul li,.rsidebar li.leaf,.lsidebar ul.menu li,.lsidebar .item-list ul li,.lsidebar li.leaf {
-	padding:.1em 0 .1em 1.5em;
+	padding:.1em 0 .1em 0em;
 }
 
 #user-login-form ul li {
@@ -728,7 +747,7 @@ p span.tagsteaser {
 	
 /*meta in nodes*/
 .metanode {
-	margin:10px 0 20px;
+	margin:0px 0 20px;
 }
 
 .metanode span {
@@ -736,24 +755,26 @@ p span.tagsteaser {
 }
 
 .metanode span.author,.submitted a {
-	padding-left:21px;
+	padding-left:0px;
 }
 
 .metanode span.date {
-	padding-left:21px;
+	padding-left:0px;
 }
 
 
 	
 /*pager*/
 .item-list ul.pager {
-	margin:0;
-	padding-top:10px;
+	margin-top:0;
+	padding-top:0px;
 }
 
 .item-list .pager li {
 	margin:0;
 	padding:3px;
+	background-image: none;
+
 }
 
 .item-list .pager li.pager-current {

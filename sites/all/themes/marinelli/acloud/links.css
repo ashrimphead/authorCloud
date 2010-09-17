@@ -10,12 +10,16 @@ a {
 font-family:'american typewriter', americantypewriterregular, 'courier new', courier, mono;
 	color:#333 ;
 	text-decoration:none;
-	font-weight: bold;
+	font-weight: normal;
 }
 
 a:hover{
-		background-color:#FFFF00;
+		background-color:#FFe303;
 
+}
+
+#admin-menu ul a:hover{
+background-color:#666;
 }
 
 h2 a {
@@ -117,11 +121,9 @@ th a,#primary .node .content th a {
 
 #utilities #plinks ul li a {
 
-	
-/*primary links*/
+	/*primary links*/
 	color:#fff;
 			border-bottom: 0px;
-
 
 	
 /*background: #ccc;*/
@@ -129,12 +131,16 @@ th a,#primary .node .content th a {
 	display:block;
 }
 
+ul.links li {
+display: inline;
+padding: 0;
+}
+
 #utilities #plinks ul li a:hover {
 
-	
+	background-color: #FFe303;
+color:#666;
 /*background: #eee;*/
-color:yellow;
-	background:none;
 	text-decoration:none;
 }
 

@@ -12,9 +12,7 @@ body {
 
 #page {
 	background: white;
-	border:12px solid #fff;
-	
-}
+	border:12px solid #fff;}
 
 img {
 	border:0;
@@ -25,6 +23,7 @@ img {
 
 	
 /*rotates images in the banners folder */
+margin-bottom: 30px;
 }
 
 #submenu {
@@ -84,10 +83,12 @@ img {
 
 	
 /*background: url(img/bgblock.gif) repeat-x top;*/
-
-	
 /*gradient on top of blocks */
-	border-bottom:1px dotted #ccc;
+-moz-border-radius: 10px;
+	border-bottom:0px dotted #ccc;
+	background-color: #f7f7f7;
+	padding:10px;
+	
 }
 
 .defaultblock h2 {
@@ -170,11 +171,14 @@ img {
 }
 
 .rsidebar ul.menu li.expanded,.lsidebar ul.menu li.expanded {
-	background:transparent url(img/expanded.gif) no-repeat 2px .4em;
+	background:none;
+	list-style-image: none;
 }
 
 .rsidebar ul.menu li.collapsed,.lsidebar ul.menu li.collapsed {
-	background:transparent url(img/collapsed.gif) no-repeat 2px .4em;
+	background:none;
+		list-style-image: none;
+
 }
 
 #primary .singlepage .node .content ul li,.comment ul li {
@@ -209,9 +213,9 @@ img {
 }
 
 .rsidebar ul.menu li,.rsidebar .item-list ul li,.rsidebar li.leaf,.lsidebar ul.menu li,.lsidebar .item-list ul li,.lsidebar li.leaf {
-	list-style-type:none;
-	list-style-image:none;
-	background:transparent url(img/leaf.gif) no-repeat 2px .4em;
+	list-style-type:square;
+	color:#777;
+	/*background:transparent url(img/leaf.gif) no-repeat 2px .4em;*/
 }
 
 #user-login-form ul li {
@@ -422,7 +426,8 @@ p span.tagsteaser {
 }
 
 .metanode span.author,.submitted a {
-	background:url(img/user.gif) no-repeat;
+	/*background:url(img/user.gif) no-repeat;*/
+	background: none;
 }
 
 .metanode span.date {
@@ -432,8 +437,8 @@ p span.tagsteaser {
 }
 
 .item-list .pager li.pager-current {
-	background-color:#ededed;
-	border:1px solid #ccc;
+	background-color:none;
+	border:0px solid #ccc;
 	color:#333;
 }
 

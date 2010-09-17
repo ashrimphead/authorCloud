@@ -1,8 +1,9 @@
 <?php
-// $Id: service_links.module,v 1.26 2008/02/26 17:01:27 apsivam Exp $
+// $Id: service_links.module,v 1.26.2.10 2009/08/09 07:56:10 thecrow Exp $
 
 /**
  * @file
+ * Co Maintainer: Fabio Mucciante aka TheCrow
  * Current Maintainer: Sivanandhan, P. apsivam .at. apsivam .dot. in
  * Original Author: Fredrik Jonsson fredrik at combonet dot se
  * A module that adds Digg, del.icio.us, reddit, Technorati etc. links to nodes.
@@ -109,6 +110,25 @@ function service_links_admin_settings() {
     '#return_value' => 1,
     '#default_value' => variable_get('service_links_show_facebook', 0),
   );
+  $form['what_links_to_show']['service_links_show_myspace'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show MySpace link'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('service_links_show_myspace', 0),
+  );
+  $form['what_links_to_show']['service_links_show_twitter'] = array(
+    '#type' => 'checkbox',
+    //'#title' => t('Show Twitter link without TinyURL support'),
+    '#title' => t('Show Twitter link'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('service_links_show_twitter', 0),
+  );
+  /*$form['what_links_to_show']['service_links_show_twitter_with_tinyurl'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show Twitter link with TinyURL support'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('service_links_show_twitter_with_tinyurl', 0),
+  );*/
   $form['what_links_to_show']['service_links_show_google'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show Google link'),
@@ -120,6 +140,18 @@ function service_links_admin_settings() {
     '#title' => t('Show Yahoo link'),
     '#return_value' => 1,
     '#default_value' => variable_get('service_links_show_yahoo', 0),
+  );
+  $form['what_links_to_show']['service_links_show_buzz'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show Buzz link'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('service_links_show_buzz', 0),
+  );
+  $form['what_links_to_show']['service_links_show_linkedin'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show LinkedIn link'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('service_links_show_linkedin', 0),
   );
 
   $form['what_links2_to_show'] = array(
@@ -284,8 +316,7 @@ function service_links_block($op = 'list', $delta = 0, $edit = array()) {
     return $blocks;
   }
   else if ($op == 'view') {
-    if (user_access('access service links') && arg(0) == 'node' && is_numeric(arg(1))) {
-      $node = node_load(arg(1));
+    if (user_access('access service links') && $node = menu_get_object('node')) {
       $links_show = _service_links_show($node);
       if ($links_show) {
         $block['subject'] = t('Bookmark/Search this post');
@@ -335,49 +366,73 @@ function service_links_render($node, $nodelink = FALSE) {
   }
   else {
     $url = url($_GET['q'], array('absolute' => TRUE));
+    $node->title = drupal_get_title();
   }
 
   $url = urlencode($url);
   $title = urlencode($node->title);
+  $summary = urlencode(strip_tags($node->teaser));
 
   if (variable_get('service_links_show_delicious', 0)) {
-    $links['service_links_delicious'] = theme('service_links_build_link', t('Delicious'), "http://del.icio.us/post?url=$url&title=$title", t('Bookmark this post on del.icio.us.'), 'images/delicious.png', $nodelink);
+    $links['service_links_delicious'] = theme('service_links_build_link', t('Delicious'), "http://del.icio.us/post?url=$url&title=$title", t('Bookmark this post on del.icio.us.'), 'delicious.png', $nodelink);
   }
   if (variable_get('service_links_show_digg', 0)) {
-    $links['service_links_digg'] = theme('service_links_build_link', t('Digg'), "http://digg.com/submit?phase=2&url=$url&title=$title", t('Digg this post on digg.com.'), 'images/digg.png', $nodelink);
+    $links['service_links_digg'] = theme('service_links_build_link', t('Digg'), "http://digg.com/submit?phase=2&url=$url&title=$title", t('Digg this post on digg.com.'), 'digg.png', $nodelink);
   }
   if (variable_get('service_links_show_stumbleupon', 0)) {
-    $links['service_links_stumbleupon'] = theme('service_links_build_link', t('StumbleUpon'), "http://www.stumbleupon.com/submit?url=$url&title=$title", t('Thumb this up at StumbleUpon.'), 'images/stumbleit.png', $nodelink);
+    $links['service_links_stumbleupon'] = theme('service_links_build_link', t('StumbleUpon'), "http://www.stumbleupon.com/submit?url=$url&title=$title", t('Thumb this up at StumbleUpon.'), 'stumbleit.png', $nodelink);
   }
   if (variable_get('service_links_show_propeller', 0)) {
-    $links['service_links_propeller'] = theme('service_links_build_link', t('Propeller'), "http://www.propeller.com/submit/?U=$url&T=$title", t('Submit to Propeller.'), 'images/propeller.png', $nodelink);
+    $links['service_links_propeller'] = theme('service_links_build_link', t('Propeller'), "http://www.propeller.com/submit/?U=$url&T=$title", t('Submit to Propeller.'), 'propeller.png', $nodelink);
   }
   if (variable_get('service_links_show_reddit', 0)) {
-    $links['service_links_reddit'] = theme('service_links_build_link', t('Reddit'), "http://reddit.com/submit?url=$url&title=$title", t('Submit this post on reddit.com.'), 'images/reddit.png', $nodelink);
+    $links['service_links_reddit'] = theme('service_links_build_link', t('Reddit'), "http://reddit.com/submit?url=$url&title=$title", t('Submit this post on reddit.com.'), 'reddit.png', $nodelink);
   }
   if (variable_get('service_links_show_magnoliacom', 0)) {
-    $links['service_links_magnoliacom'] = theme('service_links_build_link', t('Magnoliacom'), "http://ma.gnolia.com/bookmarklet/add?url=$url&title=$title", t('Submit this post on ma.gnolia.com.'), 'images/magnoliacom.png', $nodelink);
+    $links['service_links_magnoliacom'] = theme('service_links_build_link', t('Magnoliacom'), "http://ma.gnolia.com/bookmarklet/add?url=$url&title=$title", t('Submit this post on ma.gnolia.com.'), 'magnoliacom.png', $nodelink);
   }
   if (variable_get('service_links_show_newsvine', 0)) {
-    $links['service_links_newsvine'] = theme('service_links_build_link', t('Newsvine'), "http://www.newsvine.com/_tools/seed&save?u=$url&h=$title", t('Submit this post on newsvine.com.'), 'images/newsvine.png', $nodelink);
+    $links['service_links_newsvine'] = theme('service_links_build_link', t('Newsvine'), "http://www.newsvine.com/_tools/seed&save?u=$url&h=$title", t('Submit this post on newsvine.com.'), 'newsvine.png', $nodelink);
   }
   if (variable_get('service_links_show_furl', 0)) {
-    $links['service_links_furl'] = theme('service_links_build_link', t('Furl'), "http://www.furl.net/storeIt.jsp?u=$url&t=$title", t('Submit this post on furl.net.'), 'images/furl.png', $nodelink);
+    $links['service_links_furl'] = theme('service_links_build_link', t('Furl'), "http://www.furl.net/storeIt.jsp?u=$url&t=$title", t('Submit this post on furl.net.'), 'furl.png', $nodelink);
   }
   if (variable_get('service_links_show_facebook', 0)) {
-    $links['service_links_facebook'] = theme('service_links_build_link', t('Facebook'), "http://www.facebook.com/sharer.php?u=$url&t=$title", t('Share on Facebook.'), 'images/facebook.png', $nodelink);
+    $links['service_links_facebook'] = theme('service_links_build_link', t('Facebook'), "http://www.facebook.com/sharer.php?u=$url&t=$title", t('Share on Facebook.'), 'facebook.png', $nodelink);
   }
+  if (variable_get('service_links_show_myspace', 0)) {
+    $links['service_links_myspace'] = theme('service_links_build_link', t('MySpace'), "http://www.myspace.com/index.cfm?fuseaction=postto&t=$title&u=$url", t('Share on MySpace.'), 'myspace.png', $nodelink);
+  }
+  if (variable_get('service_links_show_twitter', 0)) {
+    $surl = isset($node->nid) ? url('node/'. $node->nid, array('absolute' => TRUE, 'alias' => TRUE)) : $url;
+    
+    $links['service_links_twitter'] = theme('service_links_build_link', t('Twitter'), "http://twitter.com/home/?status=$surl". "+--+". $title, t('Share on Twitter.'), 'twitter.png', $nodelink);
+  }
+  /*if (variable_get('service_links_show_twitter_with_tinyurl', 0)) {
+    $turl = drupal_http_request('http://tinyurl.com/api-create.php?url='. $url);
+    $turl = (isset($turl->data) && ($turl->code == 200)) ? $turl->data : $url;
+
+    $links['service_links_twitter'] = theme('service_links_build_link', t('Twitter'), "http://twitter.com/home/?status=$turl". "+--+". $title, t('Share on Twitter.'), 'twitter.png', $nodelink);
+  }*/
   if (variable_get('service_links_show_google', 0)) {
-    $links['service_links_google'] = theme('service_links_build_link', t('Google'), "http://www.google.com/bookmarks/mark?op=add&bkmk=$url&title=$title", t('Bookmark this post on Google.'), 'images/google.png', $nodelink);
+    $links['service_links_google'] = theme('service_links_build_link', t('Google'), "http://www.google.com/bookmarks/mark?op=add&bkmk=$url&title=$title", t('Bookmark this post on Google.'), 'google.png', $nodelink);
   }
   if (variable_get('service_links_show_yahoo', 0)) {
-    $links['service_links_yahoo'] = theme('service_links_build_link', t('Yahoo'), "http://myweb2.search.yahoo.com/myresults/bookmarklet?u=$url&t=$title", t('Bookmark this post on Yahoo.'), 'images/yahoo.png', $nodelink);
+    $links['service_links_yahoo'] = theme('service_links_build_link', t('Yahoo'), "http://bookmarks.yahoo.com/myresults/bookmarklet?u=$url&t=$title", t('Bookmark this post on Yahoo.'), 'yahoo.png', $nodelink);
   }
+  if (variable_get('service_links_show_buzz', 0)) {
+    $links['service_links_buzz'] = theme('service_links_build_link', t('Buzz Up!'), "http://buzz.yahoo.com/buzz?targetUrl=$url&headline=$title&summary=$summary", t('Buzz up this post on Yahoo! Buzz.'), 'buzz.png', $nodelink);
+  }
+  if (variable_get('service_links_show_linkedin', 0)) {
+    $source = urlencode(variable_get('site_name', 'Drupal'));
+    $links['service_links_linkedin'] = theme('service_links_build_link', t('LinkedIn'), "http://www.linkedin.com/shareArticle?mini=true&url=$url&title=$title&summary=$summary&source=$source", t('Publish this to LinkedIn'), 'linkedin.png', $nodelink);
+  }
+  
   if (variable_get('service_links_show_technorati', 0)) {
-    $links['service_links_technorati'] = theme('service_links_build_link', t('Technorati'), "http://technorati.com/cosmos/search.html?url=$url", t('Search Technorati for links to this post.'), 'images/technorati.png', $nodelink);
+    $links['service_links_technorati'] = theme('service_links_build_link', t('Technorati'), "http://technorati.com/search/$url", t('Search Technorati for links to this post.'), 'technorati.png', $nodelink);
   }
   if (variable_get('service_links_show_icerocket', 0)) {
-    $links['service_links_icerocket'] = theme('service_links_build_link', t('Icerocket'), "http://blogs.icerocket.com/search?q=$url", t('Search IceRocket for links to this post.'), 'images/icerocket.png', $nodelink);
+    $links['service_links_icerocket'] = theme('service_links_build_link', t('Icerocket'), "http://blogs.icerocket.com/search?q=$url", t('Search IceRocket for links to this post.'), 'icerocket.png', $nodelink);
   }
 
   // Add your own link by modifing the link below and uncomment it.
@@ -395,22 +450,22 @@ function theme_service_links_build_link($text, $url, $title, $image, $nodelink) 
         $link = array(
           'title' => $text,
           'href' => $url,
-          'attributes' => array('title' => $title, 'rel' => 'nofollow')
+          'attributes' => array('title' => $title, 'rel' => 'nofollow', 'target' => '_blank')
         );
         break;
       case 2:
         $link = array(
-          'title' => '<img src="'. $base_path . drupal_get_path('module', 'service_links') .'/'. $image .'" alt="'. $text .'" />',
+          'title' => '<img src="'. $base_path . drupal_get_path('module', 'service_links') .'/images/'. $image .'" alt="'. $text .'" />',
           'href' => $url,
-          'attributes' => array('title' => $title, 'rel' => 'nofollow'),
+          'attributes' => array('title' => $title, 'rel' => 'nofollow', 'target' => '_blank'),
           'html' => TRUE
         );
         break;
       case 3:
         $link = array(
-          'title' => '<img src="'. $base_path . drupal_get_path('module', 'service_links') .'/'. $image .'" alt="'. $text .'" /> '. $text,
+          'title' => '<img src="'. $base_path . drupal_get_path('module', 'service_links') .'/images/'. $image .'" alt="'. $text .'" /> '. $text,
           'href' => $url,
-          'attributes' => array('title' => $title, 'rel' => 'nofollow'),
+          'attributes' => array('title' => $title, 'rel' => 'nofollow', 'target' => '_blank'),
           'html' => TRUE
         );
         break;
@@ -419,13 +474,13 @@ function theme_service_links_build_link($text, $url, $title, $image, $nodelink) 
   else {
     switch (variable_get('service_links_style', 1)) {
       case 1:
-        $link = '<a href="'. check_url($url) .'" title="'. $title .'" rel="nofollow">'. $text .'</a>';
+        $link = '<a href="'. check_url($url) .'" title="'. $title .'" rel="nofollow" target="_blank">'. $text .'</a>';
         break;
       case 2:
-        $link = '<a href="'. check_url($url) .'" title="'. $title .'" rel="nofollow"><img src="'. $base_path . drupal_get_path('module', 'service_links') .'/'. $image .'" alt="'. $text .'" /></a>';
+        $link = '<a href="'. check_url($url) .'" title="'. $title .'" rel="nofollow" target="_blank"><img src="'. $base_path . drupal_get_path('module', 'service_links') .'/images/'. $image .'" alt="'. $text .'" /></a>';
         break;
       case 3:
-        $link = '<a href="'. check_url($url) .'" title="'. $title .'" rel="nofollow"><img src="'. $base_path . drupal_get_path('module', 'service_links') .'/'. $image .'" alt="'. $text .'" /> '. $text .'</a>';
+        $link = '<a href="'. check_url($url) .'" title="'. $title .'" rel="nofollow" target="_blank"><img src="'. $base_path . drupal_get_path('module', 'service_links') .'/images/'. $image .'" alt="'. $text .'" /> '. $text .'</a>';
         break;
     }
   }
@@ -434,11 +489,11 @@ function theme_service_links_build_link($text, $url, $title, $image, $nodelink) 
 }
 
 function theme_service_links_node_format($links) {
-  return '<div class="service-links"><div class="service-label">'. t('Bookmark/Search this post with: ') .'</div>'. theme('links', $links) .'</div>';
+  return '<div class="service-links"><div class="service-label">'. t('Bookmark/Search this post with:') .' </div>'. theme('links', $links) .'</div>';
 }
 
 function theme_service_links_block_format($items) {
-  return '<div class="service-links">'. theme('item_list', $items) .'</div>';
+  return '<div class="service-links">'. theme('item_list', array_values($items)) .'</div>';
 }
 
 /**

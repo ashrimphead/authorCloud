@@ -132,9 +132,9 @@
           <?php if ($tabs): print '<div class="tabs">'.$tabs.'</div>'; endif; ?>
         <?php if ($help) { ?><div class="help"><?php print $help ?></div><?php } ?>
           <?php if ($messages) { ?><div class="messages"><?php print $messages ?></div><?php } ?>
-<div class="drdot">
+<!--<div class="drdot">
 <hr />
-</div>
+</div>-->
          
           
  <?php print $content ?>

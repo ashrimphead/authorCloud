@@ -60,7 +60,7 @@ body {
 
 	
 /*font-size:1.1em;	line-height:1.65em;*/
-	margin-bottom:10px;
+	margin-bottom:6px;
 }
 
 #header h1,#header p.sitetitle {
@@ -133,12 +133,21 @@ form#user-login-form {
 
 .defaultblock {
 	font-size:90%;
+	line-height:120%; 
 	font-family:'lucida grande', helvetica, arial, sans-serif;
 }
 
 .defaultblock h2 {
-	font-family:'american typewriter', americantypewriterregular, 'courier new', courier, mono;
+font-size: 1.2em;
 	line-height:1.1em;
+	font-weight:normal;
+	text-transform:uppercase;
+}
+
+.defaultblock h2 a{
+font-size: 1em;
+	font-family:'american typewriter', americantypewriterregular, 'courier new', courier, mono;
+	line-height:.9em;
 	font-weight:bold;
 	text-transform:uppercase;
 }
@@ -185,6 +194,9 @@ form#user-login-form {
 #primary .singlepage h3 {
 	font-size:1.4em;
 	line-height:1.2em;
+	padding-top: 10px;
+	border-top: 1px dotted #ccc;
+	clear:both;
 }
 
 #primary .singlepage h4 {
@@ -233,6 +245,10 @@ div.bymodule ul li {
 
 	
 /*lists in content*/
+
+li.leaf{
+list-style-image: none;
+list-style-position: inside;}
 #primary .singlepage .node .content ul li,#primary .singlepage .comment ul li {
 
 	
@@ -375,12 +391,21 @@ p span.tagsteaser {
 	
 /*meta in nodes*/
 .metanode {
-	font:.85em;
+font-size:85%;
 	font-style:italic;
+	color:#ccc;
 }
 
 .metanode span.author,.metanode span.date {
-	font-weight:bold;
+font-family:'lucida grande', helvetica, arial, sans-serif;	
+
+	font-weight:normal;
+}
+
+.metanode span.author a {
+font-family:'lucida grande', helvetica, arial, sans-serif;	
+
+	font-weight:normal;
 }
 
 
@@ -389,7 +414,15 @@ p span.tagsteaser {
 .item-list ul.pager {
 	text-align:left;
 	font-size:1em;
+	list-style: none;
+	list-style-image: none;
+	list-style-type: none;
+background-image: none;
 }
+
+
+
+
 
 
 	
