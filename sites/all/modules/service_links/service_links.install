@@ -1,5 +1,5 @@
 <?php
-// $Id: service_links.install,v 1.4.2.5 2009/03/21 12:39:40 thecrow Exp $
+// $Id: service_links.install,v 1.4.4.3 2010/09/17 12:06:18 thecrow Exp $
 
 /**
  * @file
@@ -10,27 +10,8 @@
  * Implementation of hook_uninstall().
  */
 function service_links_uninstall() {
-  variable_del('service_links_node_types');
-  variable_del('service_links_show_delicious');
-  variable_del('service_links_show_digg');
-  variable_del('service_links_show_stumbleupon');
-  variable_del('service_links_show_propeller');
-  variable_del('service_links_show_reddit');
-  variable_del('service_links_show_magnoliacom');
-  variable_del('service_links_show_newsvine');
-  variable_del('service_links_show_furl');
-  variable_del('service_links_show_facebook');
-  variable_del('service_links_show_myspace');
-  variable_del('service_links_show_google');
-  variable_del('service_links_show_yahoo');
-  variable_del('service_links_show_technorati');
-  variable_del('service_links_show_icerocket');
-  variable_del('service_links_show_twitter');
-  variable_del('service_links_show_twitter_and_tinyurl');
-  variable_del('service_links_show_linkedin');
-  variable_del('service_links_show_buzz');
-  variable_del('service_links_in_links');
-  variable_del('service_links_in_node');
-  variable_del('service_links_style');
-  variable_del('service_links_agg2_link');
+  $result = db_query('SELECT name FROM {variable} v WHERE LOCATE("service_links_",v.name) > 0');
+  while ($row = db_fetch_object($result)) {
+    variable_del($row->name);
+  }
 }

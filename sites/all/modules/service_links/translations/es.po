@@ -1,4 +1,4 @@
-# $Id: es.po,v 1.1.2.1 2008/06/22 11:08:14 hass Exp $
+# $Id: es.po,v 1.1.4.2 2009/04/03 11:22:23 thecrow Exp $
 #
 # LANGUAGE translation of Drupal (service_links.module)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
